@@ -31,11 +31,11 @@ class NetworkClient {
     required MutableNetworkState state,
     required CommonParamsProvider commonParamsProvider,
     required ResponseParser responseParser,
-  })  : _dio = dio,
-        _config = config,
-        _state = state,
-        _commonParamsProvider = commonParamsProvider,
-        _responseParser = responseParser;
+  }) : _dio = dio,
+       _config = config,
+       _state = state,
+       _commonParamsProvider = commonParamsProvider,
+       _responseParser = responseParser;
 
   final Dio _dio;
   final NetworkConfig _config;
@@ -45,6 +45,31 @@ class NetworkClient {
 
   Dio get rawDio => _dio;
 
+  void enableDebugCapture({
+    String? proxyHost,
+    int? proxyPort,
+    bool badCertificateAllowed = true,
+  }) {
+    final adapter = _dio.httpClientAdapter;
+    if (adapter is! IOHttpClientAdapter) {
+      return;
+    }
+
+    adapter.createHttpClient = () {
+      final client = HttpClient();
+      if (proxyHost != null &&
+          proxyHost.isNotEmpty &&
+          proxyPort != null &&
+          proxyPort > 0) {
+        client.findProxy = (_) => 'PROXY $proxyHost:$proxyPort';
+      }
+      if (badCertificateAllowed) {
+        client.badCertificateCallback = (_, _, _) => true;
+      }
+      return client;
+    };
+  }
+
   Future<void> configureProxy({
     required String host,
     required int port,
@@ -52,7 +77,9 @@ class NetworkClient {
   }) async {
     final adapter = _dio.httpClientAdapter;
     if (adapter is! IOHttpClientAdapter) {
-      throw StateError('Proxy configuration is only supported on IO platforms.');
+      throw StateError(
+        'Proxy configuration is only supported on IO platforms.',
+      );
     }
 
     adapter.createHttpClient = () {
@@ -150,10 +177,7 @@ class NetworkClient {
     Map<String, dynamic> businessRandomFields = const {},
   }) async {
     final commonParams = await _commonParamsProvider.getCommonParams();
-    final queryParams = <String, dynamic>{
-      ...commonParams,
-      _config.queryRandomFieldName: RandomUtil.numeric(6),
-    };
+    final queryParams = <String, dynamic>{...commonParams};
     final signature = SignatureUtil.generate(
       mappedCommonParams: commonParams,
       pathFieldName: _config.signaturePathFieldName,
@@ -161,16 +185,14 @@ class NetworkClient {
       secret: _config.signatureSecret,
     );
     queryParams[_config.signatureFieldName] = signature;
+    queryParams[_config.queryRandomFieldName] = RandomUtil.numeric(6);
 
     if (method == RequestMethod.get) {
       queryParams.addAll(businessParams);
       return _BuiltRequest(queryParameters: queryParams, body: const {});
     }
 
-    final body = <String, dynamic>{
-      ...businessParams,
-      ...businessRandomFields,
-    };
+    final body = <String, dynamic>{...businessParams, ...businessRandomFields};
     if (businessRandomFields.isEmpty) {
       body[_config.businessRandomFieldName] = RandomUtil.numeric(6);
     }
@@ -179,10 +201,7 @@ class NetworkClient {
 }
 
 class _BuiltRequest {
-  const _BuiltRequest({
-    required this.queryParameters,
-    required this.body,
-  });
+  const _BuiltRequest({required this.queryParameters, required this.body});
 
   final Map<String, dynamic> queryParameters;
   final Map<String, dynamic> body;

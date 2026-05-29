@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
+import '../controllers/home_controller.dart';
 import '../../../theme/screen_adapter.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
 
   @override
@@ -11,28 +13,32 @@ class HomePage extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: SafeArea(
         bottom: false,
-        child: SingleChildScrollView(
-          padding: ScreenAdapter.edgeInsetsOnly(
-            left: 20.w,
-            top: 18.w,
-            right: 20.w,
-            bottom: 120.w,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _HomeHeader(),
-              SizedBox(height: 16.h),
-              const _TopHeroSection(),
-              SizedBox(height: 16.h),
-              const _BannerSection(),
-              SizedBox(height: 16.h),
-              const _OrderStatusSection(),
-              SizedBox(height: 16.h),
-              const _RecommendationSection(),
-              SizedBox(height: 16.h),
-              const _LoanProcessSection(),
-            ],
+        child: RefreshIndicator(
+          onRefresh: controller.fetchHomeData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: ScreenAdapter.edgeInsetsOnly(
+              left: 20.w,
+              top: 18.w,
+              right: 20.w,
+              bottom: 35.w,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const _HomeHeader(),
+                SizedBox(height: 16.h),
+                const _TopHeroSection(),
+                SizedBox(height: 16.h),
+                const _BannerSection(),
+                SizedBox(height: 16.h),
+                const _OrderStatusSection(),
+                SizedBox(height: 16.h),
+                const _RecommendationSection(),
+                SizedBox(height: 16.h),
+                const _LoanProcessSection(),
+              ],
+            ),
           ),
         ),
       ),
@@ -297,7 +303,7 @@ class _OrderStatusSection extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFFC4C4), Color(0xFFFFFFFF)],
+                    colors: [Color(0xFFFFFFFF), Color(0xFFFFC4C4)],
                   ),
                 ),
                 padding: const EdgeInsets.fromLTRB(13, 6, 13, 11),
@@ -520,7 +526,7 @@ class _RecommendationCard extends StatelessWidget {
                   ),
                 ),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: const [
                     _InfoTag(label: 'Interest rate：≤ 0.5% / Day'),
                     SizedBox(height: 5),

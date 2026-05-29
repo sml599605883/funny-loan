@@ -37,6 +37,8 @@ dependencies:
   crypto: ^3.0.6
   dio: ^5.9.0
   get: ^4.7.2
+  device_info_plus: ^11.5.0
+  package_info_plus: ^8.3.0
   pointycastle: ^3.9.1
 
 dev_dependencies:

@@ -15,7 +15,10 @@ abstract class SignatureUtil {
     };
     final keys = payload.keys.toList()..sort();
     final source = keys.map((key) => '$key${payload[key] ?? ''}').join();
-    final digest = Hmac(sha256, utf8.encode(secret)).convert(utf8.encode(source));
+    final digest = Hmac(
+      sha256,
+      utf8.encode(secret),
+    ).convert(utf8.encode(source));
     return digest.toString();
   }
 }

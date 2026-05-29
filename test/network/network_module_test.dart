@@ -46,49 +46,55 @@ void main() {
       );
     });
 
-    test('GET places common params, sign and business params in query', () async {
-      await client.get('/loan/list', query: const {'page': 1, 'size': 20});
+    test(
+      'GET places common params, sign and business params in query',
+      () async {
+        await client.get('/loan/list', query: const {'page': 1, 'size': 20});
 
-      final options = adapter.lastOptions!;
-      expect(options.method, 'GET');
-      expect(options.uri.path, '/loan/list');
-      expect(options.uri.queryParameters['tonometry'], '1.0.0');
-      expect(options.uri.queryParameters['lobate'], 'iPhone 15');
-      expect(options.uri.queryParameters['clepes'], 'device-001');
-      expect(
-        options.uri.queryParameters['rationalistic'],
-        'appstore-ph-funny-loan-ios',
-      );
-      expect(options.uri.queryParameters['page'], '1');
-      expect(options.uri.queryParameters['size'], '20');
-      expect(options.uri.queryParameters['slipcase'], isNotEmpty);
-      expect(
-        options.uri.queryParameters['cycloid'],
-        matches(RegExp(r'^\d{6}$')),
-      );
-      expect(
-        options.uri.queryParameters['expressionism'],
-        matches(RegExp(r'^\d{13}$')),
-      );
-    });
+        final options = adapter.lastOptions!;
+        expect(options.method, 'GET');
+        expect(options.uri.path, '/loan/list');
+        expect(options.uri.queryParameters['tonometry'], '1.0.0');
+        expect(options.uri.queryParameters['lobate'], 'iPhone 15');
+        expect(options.uri.queryParameters['clepes'], 'device-001');
+        expect(
+          options.uri.queryParameters['rationalistic'],
+          'appstore-ph-funny-loan-ios',
+        );
+        expect(options.uri.queryParameters['page'], '1');
+        expect(options.uri.queryParameters['size'], '20');
+        expect(options.uri.queryParameters['slipcase'], isNotEmpty);
+        expect(
+          options.uri.queryParameters['cycloid'],
+          matches(RegExp(r'^\d{6}$')),
+        );
+        expect(
+          options.uri.queryParameters['expressionism'],
+          matches(RegExp(r'^\d{13}$')),
+        );
+      },
+    );
 
-    test('POST keeps business params in body and signable params in query', () async {
-      await client.post(
-        '/loan/apply',
-        body: const {'amount': '120000', 'period': 12},
-      );
+    test(
+      'POST keeps business params in body and signable params in query',
+      () async {
+        await client.post(
+          '/loan/apply',
+          body: const {'amount': '120000', 'period': 12},
+        );
 
-      final options = adapter.lastOptions!;
-      expect(options.method, 'POST');
-      expect(options.uri.queryParameters['tonometry'], '1.0.0');
-      expect(options.uri.queryParameters['amount'], isNull);
-      expect(options.uri.queryParameters['period'], isNull);
-      expect(options.data, isA<Map<String, dynamic>>());
-      final body = options.data! as Map<String, dynamic>;
-      expect(body['amount'], '120000');
-      expect(body['period'], 12);
-      expect(body['biz_nonce'], matches(RegExp(r'^\d{6}$')));
-    });
+        final options = adapter.lastOptions!;
+        expect(options.method, 'POST');
+        expect(options.uri.queryParameters['tonometry'], '1.0.0');
+        expect(options.uri.queryParameters['amount'], isNull);
+        expect(options.uri.queryParameters['period'], isNull);
+        expect(options.data, isA<Map<String, dynamic>>());
+        final body = options.data! as Map<String, dynamic>;
+        expect(body['amount'], '120000');
+        expect(body['period'], 12);
+        expect(body['biz_nonce'], matches(RegExp(r'^\d{6}$')));
+      },
+    );
 
     test('upload keeps files and business params in multipart body', () async {
       final tempDir = await Directory.systemTemp.createTemp('funny_loan_test');
@@ -119,7 +125,10 @@ void main() {
           ),
           isTrue,
         );
-        expect(formData.fields.any((entry) => entry.key == 'biz_nonce'), isTrue);
+        expect(
+          formData.fields.any((entry) => entry.key == 'biz_nonce'),
+          isTrue,
+        );
         expect(formData.files.length, 1);
         expect(formData.files.first.key, 'attachment');
       } finally {
@@ -180,29 +189,32 @@ void main() {
       expect(state.webBaseUrl, 'https://web.example.com');
     });
 
-    test('falls back to plain json remote config when default api is unavailable', () async {
-      final dio = Dio(BaseOptions(validateStatus: (_) => true));
-      dio.httpClientAdapter = _QueueAdapter([
-        _MockReply(statusCode: 500, data: const {'error': true}),
-        _MockReply(
-          statusCode: 200,
-          data: const {
-            'apiBaseUrl': 'https://backup.example.com',
-            'webBaseUrl': 'https://backup-web.example.com',
-          },
-        ),
-      ]);
+    test(
+      'falls back to plain json remote config when default api is unavailable',
+      () async {
+        final dio = Dio(BaseOptions(validateStatus: (_) => true));
+        dio.httpClientAdapter = _QueueAdapter([
+          _MockReply(statusCode: 500, data: const {'error': true}),
+          _MockReply(
+            statusCode: 200,
+            data: const {
+              'apiBaseUrl': 'https://backup.example.com',
+              'webBaseUrl': 'https://backup-web.example.com',
+            },
+          ),
+        ]);
 
-      final config = _testConfig(
-        defaultApiBaseUrl: 'https://default.example.com',
-        defaultWebBaseUrl: 'https://web.example.com',
-        remoteConfigUrl: 'https://config.example.com',
-      );
-      final state = await NetworkBootstrapper(dio).bootstrap(config);
+        final config = _testConfig(
+          defaultApiBaseUrl: 'https://default.example.com',
+          defaultWebBaseUrl: 'https://web.example.com',
+          remoteConfigUrl: 'https://config.example.com',
+        );
+        final state = await NetworkBootstrapper(dio).bootstrap(config);
 
-      expect(state.apiBaseUrl, 'https://backup.example.com');
-      expect(state.webBaseUrl, 'https://backup-web.example.com');
-    });
+        expect(state.apiBaseUrl, 'https://backup.example.com');
+        expect(state.webBaseUrl, 'https://backup-web.example.com');
+      },
+    );
 
     test('falls back to base64 encoded remote config when needed', () async {
       final dio = Dio(BaseOptions(validateStatus: (_) => true));
@@ -242,12 +254,12 @@ void main() {
         },
         pathFieldName: 'noris',
         path: '/loan/list',
-        secret: 'secret',
+        secret: '2ad42edd9ae3951b56b527ddc6b054d0',
       );
 
       expect(
         signature,
-        '4ebe0c4649583523ac3710f5641125c7baf0f3c1a2e11f571623001d8483e108',
+        '4667dcc2ab5d6e3ff22c49d9e8e88345c7d1b57d6ce2c2c61df4843fa2d3b817',
       );
     });
 
@@ -277,7 +289,7 @@ NetworkConfig _testConfig({
     defaultApiBaseUrl: defaultApiBaseUrl,
     defaultWebBaseUrl: defaultWebBaseUrl,
     remoteConfigUrl: remoteConfigUrl,
-    signatureSecret: 'secret',
+    signatureSecret: '2ad42edd9ae3951b56b527ddc6b054d0',
     cryptoKey: '1234567890abcdef',
     cryptoIv: 'abcdef1234567890',
     staticCommonParams: const {
@@ -289,9 +301,7 @@ NetworkConfig _testConfig({
       'compliant': 'device-001',
     },
     authExpiredCallback: authExpiredCallback,
-  ).copyWith(
-    authExpiredCode: authExpiredCode,
-  );
+  ).copyWith(authExpiredCode: authExpiredCode);
 }
 
 class _RecordingAdapter implements HttpClientAdapter {
@@ -305,7 +315,11 @@ class _RecordingAdapter implements HttpClientAdapter {
   ) async {
     lastOptions = options;
     return ResponseBody.fromString(
-      jsonEncode(const {'code': 0, 'msg': 'ok', 'data': {'success': true}}),
+      jsonEncode(const {
+        'code': 0,
+        'msg': 'ok',
+        'data': {'success': true},
+      }),
       200,
       headers: {
         Headers.contentTypeHeader: [Headers.jsonContentType],
@@ -330,7 +344,9 @@ class _QueueAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     final reply = _replies[_index++];
-    final body = reply.data is String ? reply.data as String : jsonEncode(reply.data);
+    final body = reply.data is String
+        ? reply.data as String
+        : jsonEncode(reply.data);
     return ResponseBody.fromString(
       body,
       reply.statusCode,
@@ -345,10 +361,7 @@ class _QueueAdapter implements HttpClientAdapter {
 }
 
 class _MockReply {
-  const _MockReply({
-    required this.statusCode,
-    required this.data,
-  });
+  const _MockReply({required this.statusCode, required this.data});
 
   final int statusCode;
   final Object data;
