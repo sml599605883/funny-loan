@@ -7,18 +7,17 @@ class ResponseParser {
   ResponseParser({
     required NetworkConfig config,
     required AuthExpiryGuard authExpiryGuard,
-  })  : _config = config,
-        _authExpiryGuard = authExpiryGuard;
+  }) : _config = config,
+       _authExpiryGuard = authExpiryGuard;
 
   final NetworkConfig _config;
   final AuthExpiryGuard _authExpiryGuard;
 
-  Future<NetworkResponse<dynamic>> parse(dynamic raw) async {
-    final response = NetworkResponse<dynamic>.fromDynamic(
+  Future<NetworkResponse> parse(dynamic raw) async {
+    final response = NetworkResponse.fromDynamic(
       raw,
       codeKey: _config.codeKey,
       messageKey: _config.messageKey,
-      alternateMessageKey: _config.alternateMessageKey,
       dataKey: _config.dataKey,
     );
 

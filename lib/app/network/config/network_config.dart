@@ -16,10 +16,9 @@ class NetworkConfig {
     required this.businessRandomFieldName,
     required this.cryptoKey,
     required this.cryptoIv,
-    this.codeKey = 'code',
-    this.messageKey = 'msg',
-    this.alternateMessageKey = 'message',
-    this.dataKey = 'data',
+    this.codeKey = 'unplait',
+    this.messageKey = 'gluteal',
+    this.dataKey = 'rekeys',
     this.staticCommonParams = const {},
     this.asyncCommonParamsProvider,
     this.syncCommonParamsProvider,
@@ -40,7 +39,6 @@ class NetworkConfig {
   final String cryptoIv;
   final String codeKey;
   final String messageKey;
-  final String alternateMessageKey;
   final String dataKey;
   final Map<String, dynamic> staticCommonParams;
   final AsyncCommonParamsProvider? asyncCommonParamsProvider;
@@ -108,7 +106,6 @@ class NetworkConfig {
       cryptoIv: cryptoIv,
       codeKey: codeKey,
       messageKey: messageKey,
-      alternateMessageKey: alternateMessageKey,
       dataKey: dataKey,
       staticCommonParams: staticCommonParams ?? this.staticCommonParams,
       asyncCommonParamsProvider:
@@ -121,10 +118,7 @@ class NetworkConfig {
 }
 
 class MutableNetworkState {
-  MutableNetworkState({
-    required this.apiBaseUrl,
-    required this.webBaseUrl,
-  });
+  MutableNetworkState({required this.apiBaseUrl, required this.webBaseUrl});
 
   String apiBaseUrl;
   String webBaseUrl;

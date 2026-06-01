@@ -92,7 +92,7 @@ class NetworkClient {
     };
   }
 
-  Future<NetworkResponse<dynamic>> get(
+  Future<NetworkResponse> get(
     String path, {
     Map<String, dynamic> query = const {},
   }) async {
@@ -108,7 +108,7 @@ class NetworkClient {
     return _responseParser.parse(response.data);
   }
 
-  Future<NetworkResponse<dynamic>> post(
+  Future<NetworkResponse> post(
     String path, {
     Map<String, dynamic> body = const {},
     Map<String, dynamic> businessRandomFields = const {},
@@ -127,7 +127,7 @@ class NetworkClient {
     return _responseParser.parse(response.data);
   }
 
-  Future<NetworkResponse<dynamic>> upload(
+  Future<NetworkResponse> upload(
     String path, {
     Map<String, dynamic> body = const {},
     List<UploadFilePart> files = const [],

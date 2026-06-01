@@ -1,12 +1,13 @@
 import 'package:get/get.dart';
 
 import '../../../network/api/api_service.dart';
+import '../models/app_home_model.dart';
 
 class HomeController extends GetxController {
   ApiService? _apiService;
 
   final isLoading = false.obs;
-  final homeResponse = Rxn<Map<String, dynamic>>();
+  final homeResponse = Rxn<AppHomeModel>();
   final errorMessage = RxnString();
 
   void onNetworkReady(ApiService apiService) {
@@ -23,7 +24,13 @@ class HomeController extends GetxController {
     errorMessage.value = null;
     try {
       final response = await apiService.fetchAppHome({});
-      homeResponse.value = Map<String, dynamic>.from(response.data as Map);
+      final data = response.data;
+      if (data != null && data.mapOrNull != null) {
+        homeResponse.value = AppHomeModel.fromJson(data);
+      } else {
+        homeResponse.value = null;
+        errorMessage.value = 'Illegal response format';
+      }
     } catch (error) {
       errorMessage.value = error.toString();
     } finally {

@@ -138,11 +138,11 @@ void main() {
   });
 
   group('ResponseParser', () {
-    test('malformed response falls back to controlled error response', () {
-      final response = NetworkResponse<dynamic>.fromDynamic('invalid');
-      expect(response.code, NetworkResponse.malformedResponseCode);
-      expect(response.message, NetworkResponse.malformedResponseMessage);
-      expect(response.isMalformed, isTrue);
+    test('missing response fields fall back to json default values', () {
+      final response = NetworkResponse.fromDynamic('invalid');
+      expect(response.code, 0);
+      expect(response.message, '');
+      expect(response.data?.isNull(), isTrue);
     });
 
     test('auth expiry handler is idempotent under concurrency', () async {
@@ -161,7 +161,11 @@ void main() {
 
       Future<void> parseExpired() async {
         await expectLater(
-          parser.parse(const {'code': 401, 'msg': 'expired', 'data': null}),
+          parser.parse(const {
+            'unplait': 401,
+            'gluteal': 'expired',
+            'rekeys': null,
+          }),
           throwsA(isA<AuthExpiredException>()),
         );
       }
@@ -316,9 +320,9 @@ class _RecordingAdapter implements HttpClientAdapter {
     lastOptions = options;
     return ResponseBody.fromString(
       jsonEncode(const {
-        'code': 0,
-        'msg': 'ok',
-        'data': {'success': true},
+        'unplait': 0,
+        'gluteal': 'ok',
+        'rekeys': {'success': true},
       }),
       200,
       headers: {
