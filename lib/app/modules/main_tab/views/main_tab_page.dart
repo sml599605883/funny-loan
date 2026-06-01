@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../../app/routes/navigation_helper.dart';
 import '../../home/views/home_page.dart';
-import '../../../../app/routes/app_routes.dart';
 import '../controllers/main_tab_controller.dart';
 
 class MainTabPage extends GetView<MainTabController> {
@@ -131,8 +131,7 @@ class TabRootPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: () =>
-                    Get.toNamed(AppRoutes.detail, arguments: title),
+                onPressed: () => NavigationHelper.toDetail(arguments: title),
                 child: Text(actionLabel),
               ),
             ],

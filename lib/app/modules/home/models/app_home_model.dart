@@ -3,298 +3,165 @@ import '../../../core/json/json.dart';
 class AppHomeModel {
   const AppHomeModel({
     required this.raw,
-    this.loanProcessText = '',
-    this.account = '',
-    this.accountText = '',
-    this.tips = '',
-    this.broadcastNews = '',
-    this.signIn = '',
-    this.recommendations = const [],
-    this.loanProcessList = const [],
-    this.periodList = const [],
-    this.extendLists = const [],
-    required this.order,
+    required this.serviceEntry,
+    this.bannerList = const [],
+    this.largeCard,
+    this.productList = const [],
+    this.processList = const [],
   });
 
   final Map<String, dynamic> raw;
-  final String loanProcessText;
-  final String account;
-  final String accountText;
-  final String tips;
-  final String broadcastNews;
-  final String signIn;
-  final List<HomeRecommendationModel> recommendations;
-  final List<HomeProcessItemModel> loanProcessList;
-  final List<HomePeriodModel> periodList;
-  final List<HomeBannerModel> extendLists;
-  final HomeOrderModel order;
+  final HomeServiceEntryModel serviceEntry;
+  final List<HomeBannerModel> bannerList;
+  final HomeCardModel? largeCard;
+  final List<HomeProductModel> productList;
+  final List<HomeProcessModel> processList;
+
+  bool get hasBanner => bannerList.isNotEmpty;
+
+  bool get hasLargeCard => largeCard != null;
+
+  bool get hasProductList => productList.isNotEmpty;
+
+  bool get hasProcessList => processList.isNotEmpty;
 
   factory AppHomeModel.fromJson(Json json) {
-    final recommendationList = json['keelboat'].listValue
-        .whereType<Map>()
-        .map(
-          (item) => HomeRecommendationModel.fromJson(Json(item)),
-        )
-        .toList(growable: false);
-    final loanProcessList = json['topworks'].listValue
-        .whereType<Map>()
-        .map(
-          (item) => HomeProcessItemModel.fromJson(Json(item)),
-        )
-        .toList(growable: false);
-    final periodList = json['uncake'].listValue
-        .whereType<Map>()
-        .map((item) => HomePeriodModel.fromJson(Json(item)))
-        .toList(growable: false);
-    final extendLists = json['coeducational'].listValue
-        .whereType<Map>()
-        .map((item) => HomeBannerModel.fromJson(Json(item)))
-        .toList(growable: false);
+    final moduleList = json['keelboat'].listValue
+        .map((item) => HomeModuleModel.fromJson(Json(item)))
+        .toList();
+    final largeCardList = _moduleItems(
+      moduleList,
+      HomeModuleType.largeCard,
+      HomeCardModel.fromJson,
+    );
+    final smallCardList = _moduleItems(
+      moduleList,
+      HomeModuleType.smallCard,
+      HomeCardModel.fromJson,
+    );
 
     return AppHomeModel(
       raw: Map<String, dynamic>.from(json.mapValue),
-      loanProcessText: json['inflective'].stringValue,
-      account: json['surly'].stringValue,
-      accountText: json['carbonylations'].stringValue,
-      tips: json['ariettes'].stringValue,
-      broadcastNews: json['burdie'].stringValue,
-      signIn: json['delimes'].stringValue,
-      recommendations: recommendationList,
-      loanProcessList: loanProcessList,
-      periodList: periodList,
-      extendLists: extendLists,
-      order: HomeOrderModel.fromJson(json),
+      serviceEntry: HomeServiceEntryModel.fromJson(json['antichurch']),
+      bannerList: _moduleItems(
+        moduleList,
+        HomeModuleType.banner,
+        HomeBannerModel.fromJson,
+      ),
+      largeCard: largeCardList.isNotEmpty
+          ? largeCardList.first
+          : smallCardList.isNotEmpty
+          ? smallCardList.first
+          : null,
+      productList: _moduleItems(
+        moduleList,
+        HomeModuleType.productList,
+        HomeProductModel.fromJson,
+      ),
+      processList: _moduleItems(
+        moduleList,
+        HomeModuleType.processList,
+        HomeProcessModel.fromJson,
+      ),
     );
+  }
+
+  static List<T> _moduleItems<T>(
+    List<HomeModuleModel> modules,
+    HomeModuleType type,
+    T Function(Json json) builder,
+  ) {
+    final module = modules.cast<HomeModuleModel?>().firstWhere(
+      (item) => item?.type == type,
+      orElse: () => null,
+    );
+    if (module == null) {
+      return <T>[];
+    }
+    return module.items.map(builder).toList();
   }
 }
 
-class HomeRecommendationModel {
-  const HomeRecommendationModel({
+enum HomeModuleType {
+  banner,
+  largeCard,
+  smallCard,
+  repay,
+  productList,
+  processList,
+  adList,
+  unknown,
+}
+
+class HomeModuleModel {
+  const HomeModuleModel({
     required this.raw,
-    this.id = '',
-    this.productName = '',
-    this.productLogo = '',
-    this.buttonText = '',
-    this.amountRange = '',
-    this.amountRangeDes = '',
-    this.termInfo = '',
-    this.termInfoDes = '',
-    this.loanRate = '',
-    this.loanRateDes = '',
-    this.productId = '',
-    this.productDesc = '',
-    this.productTags = '',
-    this.productCode = '',
-    this.buttonColor = '',
-    this.buttonStatus = '',
-    this.buttonExplain = '',
-    this.inside = '',
-    this.term = '',
-    this.productType = '',
-    this.isCopyPhone = '',
-    this.loanRateValue = '',
-    this.todayClicked = '',
-    this.labelText = '',
-    this.titleText = '',
-    this.sordDesc = '',
-    this.todayApplyNum = '',
-    this.amountMax = '',
-    this.loanTermText = '',
-    this.signInUrl = '',
-    this.waitBindCard = '',
-    this.waitCashWithdrawal = '',
-    this.waitRepayment = '',
-    this.ifRedPoint = '',
-    this.redPointId = '',
-    this.isNewbie = '',
-    this.isH5 = '',
-    this.nativeKey = '',
-    this.sort = '',
-    this.style = '',
+    required this.rawType,
+    required this.type,
+    this.items = const [],
+  });
+
+  final Map<String, dynamic> raw;
+  final String rawType;
+  final HomeModuleType type;
+  final List<Json> items;
+
+  factory HomeModuleModel.fromJson(Json json) {
+    final items = json['federalizes'].listValue.map(Json.new).toList();
+    final rawType = json['outcrop'].stringValue;
+    return HomeModuleModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      rawType: rawType,
+      type: _parseType(rawType),
+      items: items,
+    );
+  }
+
+  static HomeModuleType _parseType(String rawType) {
+    switch (rawType) {
+      case 'BANNER':
+      case 'Subtilizations':
+        return HomeModuleType.banner;
+      case 'LARGE_CARD':
+      case 'Paresthetic':
+        return HomeModuleType.largeCard;
+      case 'SMALL_CARD':
+      case 'RegimentationsSaving':
+        return HomeModuleType.smallCard;
+      case 'REPAY':
+      case 'Calipashes':
+        return HomeModuleType.repay;
+      case 'PRODUCT_LIST':
+      case 'SummariseHumanists':
+        return HomeModuleType.productList;
+      case 'PROCESS_LIST':
+      case 'Frostfishes':
+        return HomeModuleType.processList;
+      case 'AD_LIST':
+      case 'Peartly':
+        return HomeModuleType.adList;
+      default:
+        return HomeModuleType.unknown;
+    }
+  }
+}
+
+class HomeServiceEntryModel {
+  const HomeServiceEntryModel({
+    required this.raw,
     this.iconUrl = '',
     this.linkUrl = '',
-    this.imgUrl = '',
-    this.buttonUrl = '',
   });
 
   final Map<String, dynamic> raw;
-  final String id;
-  final String productName;
-  final String productLogo;
-  final String buttonText;
-  final String amountRange;
-  final String amountRangeDes;
-  final String termInfo;
-  final String termInfoDes;
-  final String loanRate;
-  final String loanRateDes;
-  final String productId;
-  final String productDesc;
-  final String productTags;
-  final String productCode;
-  final String buttonColor;
-  final String buttonStatus;
-  final String buttonExplain;
-  final String inside;
-  final String term;
-  final String productType;
-  final String isCopyPhone;
-  final String loanRateValue;
-  final String todayClicked;
-  final String labelText;
-  final String titleText;
-  final String sordDesc;
-  final String todayApplyNum;
-  final String amountMax;
-  final String loanTermText;
-  final String signInUrl;
-  final String waitBindCard;
-  final String waitCashWithdrawal;
-  final String waitRepayment;
-  final String ifRedPoint;
-  final String redPointId;
-  final String isNewbie;
-  final String isH5;
-  final String nativeKey;
-  final String sort;
-  final String style;
   final String iconUrl;
   final String linkUrl;
-  final String imgUrl;
-  final String buttonUrl;
 
-  factory HomeRecommendationModel.fromJson(Json json) {
-    return HomeRecommendationModel(
+  factory HomeServiceEntryModel.fromJson(Json json) {
+    return HomeServiceEntryModel(
       raw: Map<String, dynamic>.from(json.mapValue),
-      id: json['isolines'].stringValue,
-      productName: json['disprovable'].stringValue,
-      productLogo: json['subsider'].stringValue,
-      buttonText: json['overengineered'].stringValue,
-      amountRange: json['decrial'].stringValue,
-      amountRangeDes: json['yesterday'].stringValue,
-      termInfo: json['cryptococci'].stringValue,
-      termInfoDes: json['reifier'].stringValue,
-      loanRate: json['recitalists'].stringValue,
-      loanRateDes: json['scumbag'].stringValue,
-      productId: json['cohabiter'].stringValue,
-      productDesc: json['preabsorbing'].stringValue,
-      productTags: json['tymbals'].stringValue,
-      productCode: json['alkylated'].stringValue,
-      buttonColor: json['logorrheic'].stringValue,
-      buttonStatus: json['housepainter'].stringValue,
-      buttonExplain: json['precancels'].stringValue,
-      inside: json['dilutes'].stringValue,
-      term: json['temerariousness'].stringValue,
-      productType: json['remudas'].stringValue,
-      isCopyPhone: json['atonalism'].stringValue,
-      loanRateValue: json['profitwise'].stringValue,
-      todayClicked: json['symposiums'].stringValue,
-      labelText: json['oxbow'].stringValue,
-      titleText: json['scrappiness'].stringValue,
-      sordDesc: json['imprinting'].stringValue,
-      todayApplyNum: json['slouches'].stringValue,
-      amountMax: json['reconcilements'].stringValue,
-      loanTermText: json['vomitives'].stringValue,
-      signInUrl: json['revertible'].stringValue,
-      waitBindCard: json['outcapering'].stringValue,
-      waitCashWithdrawal: json['microflora'].stringValue,
-      waitRepayment: json['repoured'].stringValue,
-      ifRedPoint: json['mythologically'].stringValue,
-      redPointId: json['playactings'].stringValue,
-      isNewbie: json['corotations'].stringValue,
-      isH5: json['boltonia'].stringValue,
-      nativeKey: json['sorrowfully'].stringValue,
-      sort: json['ramentum'].stringValue,
-      style: json['anticipating'].stringValue,
       iconUrl: json['lintier'].stringValue,
       linkUrl: json['intimacies'].stringValue,
-      imgUrl: json['lectin'].stringValue,
-      buttonUrl: json['estrangement'].stringValue,
-    );
-  }
-}
-
-class HomeProcessItemModel {
-  const HomeProcessItemModel({
-    required this.raw,
-    this.id = '',
-    this.title = '',
-    this.subtitle = '',
-    this.content = '',
-    this.imgUrl = '',
-    this.iconUrl = '',
-    this.sort = '',
-    this.tag = '',
-    this.name = '',
-    this.logo = '',
-  });
-
-  final Map<String, dynamic> raw;
-  final String id;
-  final String title;
-  final String subtitle;
-  final String content;
-  final String imgUrl;
-  final String iconUrl;
-  final String sort;
-  final String tag;
-  final String name;
-  final String logo;
-
-  factory HomeProcessItemModel.fromJson(Json json) {
-    return HomeProcessItemModel(
-      raw: Map<String, dynamic>.from(json.mapValue),
-      id: json['isolines'].stringValue,
-      title: json['hazinesses'].stringValue,
-      subtitle: json['tissual'].stringValue,
-      content: json['unchains'].stringValue,
-      imgUrl: json['dizzyingly'].stringValue,
-      iconUrl: json['lintier'].stringValue,
-      sort: json['ramentum'].stringValue,
-      tag: json['thugs'].stringValue,
-      name: json['governmental'].stringValue,
-      logo: json['euchromatic'].stringValue,
-    );
-  }
-}
-
-class HomePeriodModel {
-  const HomePeriodModel({
-    required this.raw,
-    this.period = '',
-    this.periodDesc = '',
-    this.selected = '',
-    this.term = '',
-    this.termType = '',
-    this.loanMode = '',
-    this.maxAmount = '',
-    this.minAmount = '',
-    this.terms = '',
-  });
-
-  final Map<String, dynamic> raw;
-  final String period;
-  final String periodDesc;
-  final String selected;
-  final String term;
-  final String termType;
-  final String loanMode;
-  final String maxAmount;
-  final String minAmount;
-  final String terms;
-
-  factory HomePeriodModel.fromJson(Json json) {
-    return HomePeriodModel(
-      raw: Map<String, dynamic>.from(json.mapValue),
-      period: json['genres'].stringValue,
-      periodDesc: json['burners'].stringValue,
-      selected: json['religiously'].stringValue,
-      term: json['temerariousness'].stringValue,
-      termType: json['lixiviates'].stringValue,
-      loanMode: json['shrimped'].stringValue,
-      maxAmount: json['boroughs'].stringValue,
-      minAmount: json['fireboard'].stringValue,
-      terms: json['swaggered'].stringValue,
     );
   }
 }
@@ -303,119 +170,347 @@ class HomeBannerModel {
   const HomeBannerModel({
     required this.raw,
     this.id = '',
-    this.title = '',
-    this.name = '',
-    this.imgUrl = '',
+    this.imageUrl = '',
     this.linkUrl = '',
-    this.url = '',
-    this.position = '',
-    this.positionId = '',
-    this.source = '',
-    this.moduleId = '',
-    this.isDisplaySign = '',
-    this.signType = '',
   });
 
   final Map<String, dynamic> raw;
   final String id;
-  final String title;
-  final String name;
-  final String imgUrl;
+  final String imageUrl;
   final String linkUrl;
-  final String url;
-  final String position;
-  final String positionId;
-  final String source;
-  final String moduleId;
-  final String isDisplaySign;
-  final String signType;
 
   factory HomeBannerModel.fromJson(Json json) {
     return HomeBannerModel(
       raw: Map<String, dynamic>.from(json.mapValue),
-      id: json['mislodges'].stringValue,
-      title: json['hazinesses'].stringValue,
-      name: json['governmental'].stringValue,
-      imgUrl: json['dizzyingly'].stringValue,
-      linkUrl: json['intimacies'].stringValue,
-      url: json['sidearms'].stringValue,
-      position: json['encoder'].stringValue,
-      positionId: json['magnetites'].stringValue,
-      source: json['allantoins'].stringValue,
-      moduleId: json['preens'].stringValue,
-      isDisplaySign: json['elaboratenesses'].stringValue,
-      signType: json['chafes'].stringValue,
+      id: json['isolines'].stringValue,
+      imageUrl: json['lectin'].stringValue,
+      linkUrl: json['sidearms'].stringValue,
     );
   }
 }
 
-class HomeOrderModel {
-  const HomeOrderModel({
+class HomeCardModel {
+  const HomeCardModel({
+    required this.raw,
+    this.id = '',
+    this.productName = '',
+    this.productLogo = '',
+    this.buttonText = '',
+    this.maxAmount = '',
+    this.maxAmountDesc = '',
+    this.termInfo = '',
+    this.termInfoDesc = '',
+    this.rateInfo = '',
+    this.rateInfoDesc = '',
+    this.description = '',
+    this.authStatus = 0,
+    this.receiptAccount = '',
+    this.receiptAccountDesc = '',
+    this.progressList = const [],
+    this.creditList = const [],
+    this.amountIconUrl = '',
+    this.rateIconUrl = '',
+  });
+
+  final Map<String, dynamic> raw;
+  final String id;
+  final String productName;
+  final String productLogo;
+  final String buttonText;
+  final String maxAmount;
+  final String maxAmountDesc;
+  final String termInfo;
+  final String termInfoDesc;
+  final String rateInfo;
+  final String rateInfoDesc;
+  final String description;
+  final int authStatus;
+  final String receiptAccount;
+  final String receiptAccountDesc;
+  final List<HomeProgressStepModel> progressList;
+  final List<HomeCreditStepModel> creditList;
+  final String amountIconUrl;
+  final String rateIconUrl;
+
+  factory HomeCardModel.fromJson(Json json) {
+    return HomeCardModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      id: json['isolines'].stringValue,
+      productName: json['disprovable'].stringValue,
+      productLogo: json['subsider'].stringValue,
+      buttonText: json['overengineered'].stringValue,
+      maxAmount: json['decrial'].stringValue,
+      maxAmountDesc: json['yesterday'].stringValue,
+      termInfo: json['cryptococci'].stringValue,
+      termInfoDesc: json['reifier'].stringValue,
+      rateInfo: json['recitalists'].stringValue,
+      rateInfoDesc: json['scumbag'].stringValue,
+      description: json['inflective'].stringValue,
+      authStatus: json['landforms'].intValue,
+      receiptAccount: json['surly'].stringValue,
+      receiptAccountDesc: json['carbonylations'].stringValue,
+      progressList: json['topworks'].listValue
+          .map((item) => HomeProgressStepModel.fromJson(Json(item)))
+          .toList(),
+      creditList: json['uncake'].listValue
+          .map((item) => HomeCreditStepModel.fromJson(Json(item)))
+          .toList(),
+      amountIconUrl: json['allegorizes'].stringValue,
+      rateIconUrl: json['pieplant'].stringValue,
+    );
+  }
+}
+
+class HomeProgressStepModel {
+  const HomeProgressStepModel({
+    required this.raw,
+    this.title = '',
+    this.amount = '',
+    this.isSelected = 0,
+  });
+
+  final Map<String, dynamic> raw;
+  final String title;
+  final String amount;
+  final int isSelected;
+
+  factory HomeProgressStepModel.fromJson(Json json) {
+    return HomeProgressStepModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      title: json['hazinesses'].stringValue,
+      amount: json['herpetologist'].stringValue,
+      isSelected: json['religiously'].intValue,
+    );
+  }
+}
+
+class HomeCreditStepModel {
+  const HomeCreditStepModel({
+    required this.raw,
+    this.period = '',
+    this.periodDesc = '',
+    this.rateInfo = '',
+  });
+
+  final Map<String, dynamic> raw;
+  final String period;
+  final String periodDesc;
+  final String rateInfo;
+
+  factory HomeCreditStepModel.fromJson(Json json) {
+    return HomeCreditStepModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      period: json['genres'].stringValue,
+      periodDesc: json['burners'].stringValue,
+      rateInfo: json['recitalists'].stringValue,
+    );
+  }
+}
+
+class HomeProductModel {
+  const HomeProductModel({
+    required this.raw,
+    this.id = '',
+    this.productName = '',
+    this.maxAmount = '',
+    this.tags = const [],
+    this.productDesc = '',
+    this.productLogo = '',
+    this.productCode = '',
+    this.buttonText = '',
+    this.buttonColor = '',
+    this.maxAmountDesc = '',
+    this.rateDesc = '',
+    this.buttonStatus = 0,
+    this.buttonExplain = 0,
+    this.inside = 0,
+    this.term = '',
+    this.productType = 0,
+    this.isCopyPhone = '',
+    this.loanRateValue = '',
+    this.linkUrl = '',
+    this.termInfo = '',
+    this.todayClicked = 0,
+    this.labelText = const [],
+    this.titleText = '',
+    this.sortDesc = const [],
+    this.todayApplyNum = 0,
+    this.amountMax = '',
+    this.loanRate = '',
+    this.loanTermText = '',
+  });
+
+  final Map<String, dynamic> raw;
+  final String id;
+  final String productName;
+  final String maxAmount;
+  final List<String> tags;
+  final String productDesc;
+  final String productLogo;
+  final String productCode;
+  final String buttonText;
+  final String buttonColor;
+  final String maxAmountDesc;
+  final String rateDesc;
+  final int buttonStatus;
+  final int buttonExplain;
+  final int inside;
+  final String term;
+  final int productType;
+  final String isCopyPhone;
+  final String loanRateValue;
+  final String linkUrl;
+  final String termInfo;
+  final int todayClicked;
+  final List<String> labelText;
+  final String titleText;
+  final List<String> sortDesc;
+  final int todayApplyNum;
+  final String amountMax;
+  final String loanRate;
+  final String loanTermText;
+
+  factory HomeProductModel.fromJson(Json json) {
+    return HomeProductModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      id: json['isolines'].stringValue,
+      productName: json['disprovable'].stringValue,
+      maxAmount: json['decrial'].stringValue,
+      tags: json['tymbals'].listValue
+          .map((item) => Json(item).stringValue)
+          .toList(),
+      productDesc: json['preabsorbing'].stringValue,
+      productLogo: json['subsider'].stringValue,
+      productCode: json['alkylated'].stringValue,
+      buttonText: json['overengineered'].stringValue,
+      buttonColor: json['logorrheic'].stringValue,
+      maxAmountDesc: json['yesterday'].stringValue,
+      rateDesc: json['scumbag'].stringValue,
+      buttonStatus: json['housepainter'].intValue,
+      buttonExplain: json['precancels'].intValue,
+      inside: json['dilutes'].intValue,
+      term: json['temerariousness'].stringValue,
+      productType: json['remudas'].intValue,
+      isCopyPhone: json['atonalism'].stringValue,
+      loanRateValue: json['profitwise'].stringValue,
+      linkUrl: json['sidearms'].stringValue,
+      termInfo: json['cryptococci'].stringValue,
+      todayClicked: json['symposiums'].intValue,
+      labelText: json['oxbow'].listValue
+          .map((item) => Json(item).stringValue)
+          .toList(),
+      titleText: json['scrappiness'].stringValue,
+      sortDesc: json['imprinting'].listValue
+          .map((item) => Json(item).stringValue)
+          .toList(),
+      todayApplyNum: json['slouches'].intValue,
+      amountMax: json['reconcilements'].stringValue,
+      loanRate: json['recitalists'].stringValue,
+      loanTermText: json['vomitives'].stringValue,
+    );
+  }
+}
+
+class HomeProcessModel {
+  const HomeProcessModel({
     required this.raw,
     this.orderNo = '',
-    this.orderId = '',
     this.productId = '',
     this.productName = '',
     this.productLogo = '',
-    this.loanAmount = '',
+    this.title = '',
     this.amount = '',
-    this.amountText = '',
+    this.amountDesc = '',
     this.date = '',
-    this.dateText = '',
-    this.orderStatus = '',
-    this.status2 = '',
+    this.dateDesc = '',
+    this.receiptAccount = '',
+    this.receiptAccountDesc = '',
+    this.orderStatus = 0,
+    this.cardStatus = 0,
     this.displayAmount = '',
     this.orderStatusText = '',
-    this.firstFailedAt = '',
-    this.cancelEndAt = '',
-    this.buttons = '',
-    this.buttonText = '',
-    this.buttonUrl = '',
+    this.description = '',
+    this.progressList = const [],
+    this.firstFailedAt = 0,
+    this.cancelEndAt = 0,
+    this.linkUrl = '',
+    this.buttons = const [],
   });
 
   final Map<String, dynamic> raw;
   final String orderNo;
-  final String orderId;
   final String productId;
   final String productName;
   final String productLogo;
-  final String loanAmount;
+  final String title;
   final String amount;
-  final String amountText;
+  final String amountDesc;
   final String date;
-  final String dateText;
-  final String orderStatus;
-  final String status2;
+  final String dateDesc;
+  final String receiptAccount;
+  final String receiptAccountDesc;
+  final int orderStatus;
+  final int cardStatus;
   final String displayAmount;
   final String orderStatusText;
-  final String firstFailedAt;
-  final String cancelEndAt;
-  final String buttons;
-  final String buttonText;
-  final String buttonUrl;
+  final String description;
+  final List<HomeProgressStepModel> progressList;
+  final int firstFailedAt;
+  final int cancelEndAt;
+  final String linkUrl;
+  final List<HomeProcessButtonModel> buttons;
 
-  factory HomeOrderModel.fromJson(Json json) {
-    return HomeOrderModel(
+  factory HomeProcessModel.fromJson(Json json) {
+    return HomeProcessModel(
       raw: Map<String, dynamic>.from(json.mapValue),
       orderNo: json['nosh'].stringValue,
-      orderId: json['marlstone'].stringValue,
       productId: json['cohabiter'].stringValue,
       productName: json['territoriality'].stringValue,
       productLogo: json['kwacha'].stringValue,
-      loanAmount: json['herpetologist'].stringValue,
+      title: json['hazinesses'].stringValue,
       amount: json['unfindable'].stringValue,
-      amountText: json['parfocalizes'].stringValue,
+      amountDesc: json['parfocalizes'].stringValue,
       date: json['scauper'].stringValue,
-      dateText: json['motioner'].stringValue,
-      orderStatus: json['improvements'].stringValue,
-      status2: json['administer'].stringValue,
+      dateDesc: json['motioner'].stringValue,
+      receiptAccount: json['surly'].stringValue,
+      receiptAccountDesc: json['carbonylations'].stringValue,
+      orderStatus: json['improvements'].intValue,
+      cardStatus: json['administer'].intValue,
       displayAmount: json['isolationisms'].stringValue,
       orderStatusText: json['snoutiest'].stringValue,
-      firstFailedAt: json['contorting'].stringValue,
-      cancelEndAt: json['gossamer'].stringValue,
-      buttons: json['depressingly'].stringValue,
-      buttonText: json['pilular'].stringValue,
-      buttonUrl: json['estrangement'].stringValue,
+      description: json['inflective'].stringValue,
+      progressList: json['topworks'].listValue
+          .map((item) => HomeProgressStepModel.fromJson(Json(item)))
+          .toList(),
+      firstFailedAt: json['contorting'].intValue,
+      cancelEndAt: json['gossamer'].intValue,
+      linkUrl: json['sidearms'].stringValue,
+      buttons: json['depressingly'].listValue
+          .map((item) => HomeProcessButtonModel.fromJson(Json(item)))
+          .toList(),
+    );
+  }
+}
+
+class HomeProcessButtonModel {
+  const HomeProcessButtonModel({
+    required this.raw,
+    this.action = '',
+    this.enabled = 0,
+    this.text = '',
+  });
+
+  final Map<String, dynamic> raw;
+  final String action;
+  final int enabled;
+  final String text;
+
+  factory HomeProcessButtonModel.fromJson(Json json) {
+    return HomeProcessButtonModel(
+      raw: Map<String, dynamic>.from(json.mapValue),
+      action: json['outcrop'].stringValue,
+      enabled: json['ballsy'].intValue,
+      text: json['pilular'].stringValue,
     );
   }
 }

@@ -10,7 +10,7 @@ class NetworkResponse {
 
   final int code;
   final String message;
-  final Json? data;
+  final Json data;
   final Object? raw;
 
   bool isSuccessWith(Set<int> successCodes) => successCodes.contains(code);

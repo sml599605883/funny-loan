@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../../../network/api/api_service.dart';
@@ -23,15 +24,13 @@ class HomeController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
+      EasyLoading.show();
       final response = await apiService.fetchAppHome({});
       final data = response.data;
-      if (data != null && data.mapOrNull != null) {
-        homeResponse.value = AppHomeModel.fromJson(data);
-      } else {
-        homeResponse.value = null;
-        errorMessage.value = 'Illegal response format';
-      }
+      EasyLoading.dismiss();
+      homeResponse.value = AppHomeModel.fromJson(data);
     } catch (error) {
+      EasyLoading.showError(error.toString());
       errorMessage.value = error.toString();
     } finally {
       isLoading.value = false;
