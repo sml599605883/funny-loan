@@ -4,6 +4,8 @@ import '../modules/detail/views/detail_page.dart';
 import '../modules/login/controllers/login_controller.dart';
 import '../modules/login/views/login_page.dart';
 import '../modules/main_tab/views/main_tab_page.dart';
+import '../modules/order_list/views/order_list_page.dart';
+import '../modules/setting/views/setting_page.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -19,6 +21,18 @@ class AppPages {
     GetPage(
       name: AppRoutes.detail,
       page: () => const DetailPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.setting,
+      page: () => const SettingPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.orderList,
+      page: () => const OrderListPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

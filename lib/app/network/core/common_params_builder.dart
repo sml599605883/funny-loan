@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../core/storage/app_data_store.dart';
+
 class CommonParamsBuilder {
   static String? _sessionId;
 
@@ -12,7 +14,8 @@ class CommonParamsBuilder {
     final iosDeviceInfo = await deviceInfo.iosInfo;
     final deviceId = await _deviceId(deviceInfo);
 
-    _sessionId ??= '';
+    _sessionId ??=
+        AppDataStore.getPersistentString(AppDataStore.persistedTokenKey) ?? '';
 
     return <String, dynamic>{
       'tonometry': packageInfo.version,
@@ -22,6 +25,10 @@ class CommonParamsBuilder {
       'manioc': _sessionId,
       'compliant': deviceId,
     };
+  }
+
+  static void updateSessionId(String? sessionId) {
+    _sessionId = sessionId?.trim() ?? '';
   }
 
   static Future<String> _deviceId(DeviceInfoPlugin deviceInfo) async {

@@ -142,7 +142,7 @@ void main() {
       final response = NetworkResponse.fromDynamic('invalid');
       expect(response.code, 0);
       expect(response.message, '');
-      expect(response.data?.isNull(), isTrue);
+      expect(response.data.isNull(), isTrue);
     });
 
     test('auth expiry handler is idempotent under concurrency', () async {

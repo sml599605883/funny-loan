@@ -33,6 +33,12 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We use your camera so you can capture required identity and application documents.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We use your location to support risk control, compliance checks, and service security.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We request tracking permission to measure campaign performance and improve acquisition efficiency.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -56,6 +62,10 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

@@ -26,12 +26,12 @@ class LoginPage extends GetView<LoginController> {
             return AnimatedPadding(
               duration: const Duration(milliseconds: 200),
               padding: EdgeInsets.only(bottom: viewInsets),
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                child: SizedBox(
-                  height: contentHeight,
-                  child: Obx(
-                    () => Stack(
+              child: AutofillGroup(
+                child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
+                  child: SizedBox(
+                    height: contentHeight,
+                    child: Stack(
                       children: [
                         Positioned(
                           left: 20.w,
@@ -111,7 +111,9 @@ class _LoginCard extends StatelessWidget {
           ? AppColors.loginPrimary
           : AppColors.loginButtonDisabled;
       final isRequestCodeEnabled =
-          controller.canRequestCode.value && controller.countdown.value == 0;
+          controller.canRequestCode.value &&
+          controller.countdown.value == 0 &&
+          !controller.isRequestingCode.value;
 
       return Container(
         padding: ScreenAdapter.edgeInsetsOnly(left: 26, right: 26, bottom: 16),
@@ -198,30 +200,34 @@ class _LoginCard extends StatelessWidget {
                 ),
               ),
               controller: controller.phoneController,
+              focusNode: controller.phoneFocusNode,
               hintText: 'Please fill in your phone number',
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(15),
               ],
+              autofillHints: const [AutofillHints.telephoneNumberNational],
               keyboardType: TextInputType.number,
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 color: Colors.black,
-                fontSize: 14,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
               ),
             ),
             SizedBox(height: 19.h),
             _LoginField(
               controller: controller.codeController,
+              focusNode: controller.codeFocusNode,
               hintText: 'Send SMS verification code',
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(6),
               ],
+              autofillHints: const [AutofillHints.oneTimeCode],
               keyboardType: TextInputType.number,
-              textStyle: const TextStyle(
+              textStyle: TextStyle(
                 color: Colors.black,
-                fontSize: 14,
+                fontSize: 14.sp,
                 fontWeight: FontWeight.w700,
               ),
               trailing: GestureDetector(
@@ -277,21 +283,25 @@ class _LoginField extends StatelessWidget {
     this.leading,
     this.secondaryLeading,
     required this.controller,
+    this.focusNode,
     required this.hintText,
     this.trailing,
     this.inputFormatters,
     this.keyboardType,
     this.textStyle,
+    this.autofillHints,
   });
 
   final Widget? leading;
   final Widget? secondaryLeading;
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final String hintText;
   final Widget? trailing;
   final List<TextInputFormatter>? inputFormatters;
   final TextInputType? keyboardType;
   final TextStyle? textStyle;
+  final Iterable<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
@@ -330,8 +340,12 @@ class _LoginField extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              focusNode: focusNode,
               inputFormatters: inputFormatters,
               keyboardType: keyboardType,
+              autofillHints: autofillHints,
+              enableSuggestions: false,
+              autocorrect: false,
               style: textStyle,
               decoration: InputDecoration(
                 isDense: true,
@@ -389,22 +403,26 @@ class _AgreementSection extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text.rich(
-                TextSpan(
-                  style: TextStyle(color: Colors.white, fontSize: 14.sp),
-                  children: const [
-                    TextSpan(text: 'I have read and agree to the '),
-                    TextSpan(
-                      text: 'Privacy Policy',
+              child: Wrap(
+                children: [
+                  Text(
+                    'I have read and agree to the ',
+                    style: TextStyle(color: Colors.white, fontSize: 14.sp),
+                  ),
+                  GestureDetector(
+                    onTap: controller.onPrivacyPolicyTap,
+                    child: Text(
+                      'Privacy Policy',
                       style: TextStyle(
                         color: AppColors.loginPolicyHighlight,
                         decoration: TextDecoration.underline,
                         decorationColor: AppColors.loginPolicyHighlight,
+                        fontSize: 14.sp,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ],

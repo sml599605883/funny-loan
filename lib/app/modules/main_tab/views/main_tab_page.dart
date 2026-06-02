@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 
 import '../../../../app/routes/navigation_helper.dart';
 import '../../home/views/home_page.dart';
+import '../../mine/views/mine_page.dart';
+import '../../order_list/views/order_list_page.dart';
 import '../controllers/main_tab_controller.dart';
 
 class MainTabPage extends GetView<MainTabController> {
@@ -14,16 +16,8 @@ class MainTabPage extends GetView<MainTabController> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       const HomePage(),
-      TabRootPage(
-        title: '产品',
-        description: 'Product recommendation list',
-        actionLabel: '进入产品详情',
-      ),
-      TabRootPage(
-        title: '我的',
-        description: 'Profile and account center',
-        actionLabel: '进入我的详情',
-      ),
+      const OrderListPage(),
+      const MinePage(),
     ];
 
     return Obx(
