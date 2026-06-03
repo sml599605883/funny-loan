@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 
 import 'bindings/initial_binding.dart';
 import 'core/permissions/app_permission_service.dart';
+import 'modules/main_tab/controllers/main_tab_controller.dart';
 import 'core/widgets/keyboard_dismiss_on_tap.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
@@ -25,6 +26,8 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
   bool _requestedNotificationPermission = false;
   bool _requestedTrackingPermission = false;
   bool _isPumpingStartupPermissions = false;
+  bool _isRequestingForegroundPermission = false;
+  bool _ignoreNextResumeHomeRefresh = false;
   Timer? _networkPermissionRetryTimer;
 
   @override
@@ -45,7 +48,18 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if ((state == AppLifecycleState.inactive ||
+            state == AppLifecycleState.paused ||
+            state == AppLifecycleState.hidden) &&
+        _isRequestingForegroundPermission) {
+      _ignoreNextResumeHomeRefresh = true;
+    }
     if (state == AppLifecycleState.resumed) {
+      if (_ignoreNextResumeHomeRefresh) {
+        _ignoreNextResumeHomeRefresh = false;
+      } else if (Get.isRegistered<MainTabController>()) {
+        Get.find<MainTabController>().onAppResumed();
+      }
       unawaited(_pumpStartupPermissions());
     }
   }
@@ -84,6 +98,7 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
       initialBinding: InitialBinding(),
       getPages: AppPages.pages,
       initialRoute: AppRoutes.home,
+      routingCallback: _handleRoutingChanged,
       defaultTransition: Transition.rightToLeft,
       popGesture: false,
     );
@@ -103,7 +118,9 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
 
       if (!_requestedNotificationPermission) {
         _requestedNotificationPermission = true;
-        await AppPermissionService.requestNotification();
+        await _requestForegroundPermission(
+          AppPermissionService.requestNotification,
+        );
       }
 
       final lifecycleState = WidgetsBinding.instance.lifecycleState;
@@ -113,7 +130,9 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
 
       if (!_requestedTrackingPermission) {
         _requestedTrackingPermission = true;
-        await AppPermissionService.requestTracking();
+        await _requestForegroundPermission(
+          AppPermissionService.requestTracking,
+        );
       }
     } finally {
       _isPumpingStartupPermissions = false;
@@ -122,15 +141,12 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
 
   void _schedulePermissionRetry() {
     _networkPermissionRetryTimer?.cancel();
-    _networkPermissionRetryTimer = Timer(
-      const Duration(seconds: 2),
-      () {
-        if (!mounted) {
-          return;
-        }
-        unawaited(_pumpStartupPermissions());
-      },
-    );
+    _networkPermissionRetryTimer = Timer(const Duration(seconds: 2), () {
+      if (!mounted) {
+        return;
+      }
+      unawaited(_pumpStartupPermissions());
+    });
   }
 
   Future<bool> _hasUsableNetwork() async {
@@ -140,6 +156,25 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
     } on SocketException {
       return false;
     }
+  }
+
+  Future<T> _requestForegroundPermission<T>(
+    Future<T> Function() request,
+  ) async {
+    _isRequestingForegroundPermission = true;
+    try {
+      return await request();
+    } finally {
+      _isRequestingForegroundPermission = false;
+    }
+  }
+
+  void _handleRoutingChanged(Routing? routing) {
+    if (routing?.current != AppRoutes.home ||
+        !Get.isRegistered<MainTabController>()) {
+      return;
+    }
+    Get.find<MainTabController>().onHomeRouteVisible();
   }
 
   void _configureEasyLoading() {
