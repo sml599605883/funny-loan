@@ -2,10 +2,12 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../../../network/api/api_service.dart';
+import '../../../routes/api_navigation_helper.dart';
 import '../models/app_home_model.dart';
 
 class HomeController extends GetxController {
   ApiService? _apiService;
+  bool _isApplyingTopHeroProduct = false;
 
   final isLoading = false.obs;
   final homeResponse = Rxn<AppHomeModel>();
@@ -18,7 +20,7 @@ class HomeController extends GetxController {
 
   Future<void> fetchHomeData() async {
     final apiService = _apiService;
-    if (apiService == null) {
+    if (apiService == null || isLoading.value) {
       return;
     }
     isLoading.value = true;
@@ -34,6 +36,29 @@ class HomeController extends GetxController {
       errorMessage.value = error.toString();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> applyTopHeroProduct(HomeCardModel card) async {
+    final productId = card.id.trim();
+    if (_isApplyingTopHeroProduct || productId.isEmpty) {
+      return;
+    }
+    _isApplyingTopHeroProduct = true;
+    try {
+      EasyLoading.show();
+      final result = await ApiNavigationHelper.applyProductAndNavigate(
+        productId,
+      );
+      EasyLoading.dismiss();
+      final handled = result['handled'] == true;
+      if (!handled) {
+        EasyLoading.showError('Route unavailable');
+      }
+    } catch (error) {
+      EasyLoading.showError(error.toString());
+    } finally {
+      _isApplyingTopHeroProduct = false;
     }
   }
 }

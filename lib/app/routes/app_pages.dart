@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../modules/certification_step/views/certification_step_page.dart';
 import '../modules/detail/views/detail_page.dart';
 import '../modules/login/controllers/login_controller.dart';
 import '../modules/login/views/login_page.dart';
@@ -33,6 +34,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.orderList,
       page: () => const OrderListPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationStep,
+      page: () => const CertificationStepPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

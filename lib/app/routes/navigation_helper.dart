@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../modules/main_tab/controllers/main_tab_controller.dart';
 import 'app_routes.dart';
+import 'navigation_target_mapper.dart';
 
 class NavigationHelper {
   NavigationHelper._();
@@ -40,5 +41,51 @@ class NavigationHelper {
       AppRoutes.orderList,
       arguments: <String, dynamic>{'initialTab': initialTab},
     );
+  }
+
+  static Future<T?>? toCertificationStep<T extends Object?>({
+    required String routeKey,
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationStep,
+      arguments: <String, dynamic>{
+        'routeKey': routeKey,
+        'payload': arguments,
+      },
+    );
+  }
+
+  static Future<T?>? toAppPage<T extends Object?>(
+    String rawPage, {
+    Object? arguments,
+    Object? orderStatusCode,
+  }) {
+    switch (NavigationTargetMapper.normalizeAppPage(rawPage)) {
+      case NavigationTargetMapper.main:
+        return offAllToAppHome<T>();
+      case NavigationTargetMapper.setting:
+        return toSetting<T>();
+      case NavigationTargetMapper.login:
+        return toLogin<T>();
+      case NavigationTargetMapper.order:
+        return toOrderList<T>(
+          initialTab: NavigationTargetMapper.orderTabIndexForCode(
+            orderStatusCode,
+          ),
+        );
+      case NavigationTargetMapper.productDetail:
+        return toDetail<T>(arguments: arguments);
+      default:
+        if (NavigationTargetMapper.isCertificationStepRouteKey(rawPage)) {
+          return toCertificationStep<T>(
+            routeKey: NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ),
+            arguments: arguments,
+          );
+        }
+        return null;
+    }
   }
 }

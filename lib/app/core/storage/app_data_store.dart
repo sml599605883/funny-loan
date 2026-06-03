@@ -7,6 +7,7 @@ class AppDataStore {
 
   static const persistedPhoneKey = 'login_phone';
   static const persistedTokenKey = 'user_token';
+  static const productDetailScabiosaCacheKey = 'product_detail_scabiosa';
 
   static final Map<String, Object?> _memoryCache = <String, Object?>{};
   static SharedPreferences? _preferences;

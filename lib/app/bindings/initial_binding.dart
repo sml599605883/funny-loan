@@ -2,9 +2,10 @@ import 'package:get/get.dart';
 
 import '../modules/home/controllers/home_controller.dart';
 import '../modules/main_tab/controllers/main_tab_controller.dart';
+import '../network/api/api_service.dart';
 import '../network/core/common_params_builder.dart';
-import '../network/network_module.dart';
 import '../network/config/network_config.dart';
+import '../network/network_module.dart';
 
 class InitialBinding extends Bindings {
   @override
@@ -28,6 +29,8 @@ class InitialBinding extends Bindings {
         )
         .then((networkModule) {
           Get.put(networkModule, permanent: true);
+          Get.put<ApiService>(networkModule.apiService, permanent: true);
+          Get.put<MutableNetworkState>(networkModule.state, permanent: true);
           homeController.onNetworkReady(networkModule.apiService);
         })
         .catchError((Object error) {

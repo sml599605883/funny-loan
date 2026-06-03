@@ -26,7 +26,12 @@ class HomePage extends GetView<HomeController> {
 
       if (homeData?.largeCard != null) {
         children.add(SizedBox(height: 16.h));
-        children.add(TopHeroSection(card: homeData!.largeCard!));
+        children.add(
+          TopHeroSection(
+            card: homeData!.largeCard!,
+            onTap: () => controller.applyTopHeroProduct(homeData.largeCard!),
+          ),
+        );
       }
       if (bannerList.isNotEmpty) {
         children.add(SizedBox(height: 16.h));
