@@ -5,6 +5,7 @@ import '../modules/main_tab/controllers/main_tab_controller.dart';
 import '../network/api/api_service.dart';
 import '../network/core/common_params_builder.dart';
 import '../network/config/network_config.dart';
+import '../network/errors/network_error_mapper.dart';
 import '../network/network_module.dart';
 
 class InitialBinding extends Bindings {
@@ -34,7 +35,7 @@ class InitialBinding extends Bindings {
           homeController.onNetworkReady(networkModule.apiService);
         })
         .catchError((Object error) {
-          homeController.errorMessage.value = error.toString();
+          homeController.errorMessage.value = NetworkErrorMapper.map(error);
         });
   }
 }

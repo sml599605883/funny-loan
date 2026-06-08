@@ -5,4 +5,6 @@ abstract class AppRoutes {
   static const setting = '/setting';
   static const orderList = '/order-list';
   static const certificationStep = '/certification-step';
+  static const certificationUpload = '/certification-upload';
+  static const certificationUploadSuccess = '/certification-upload-success';
 }

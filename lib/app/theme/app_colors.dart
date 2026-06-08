@@ -30,4 +30,27 @@ abstract class AppColors {
   static const orderStatusSettled = Color(0xFF6FB26A);
   static const orderLabelText = Color(0xFFB0B0B0);
   static const orderDueLabelText = Color(0xFFCECECE);
+
+  static const certificationTextPrimary = Color(0xFF281001);
+  static const certificationBackSurface = Color(0xFFEDEAE5);
+  static const certificationHintText = Color(0xFFFFE7B1);
+  static const certificationHintSurface = Color(0xFFFF8A2E);
+  static const certificationCardSurface = Color(0xFFF5F5F3);
+  static const certificationCardHeader = Color(0xFFE1E1DC);
+  static const certificationCardLine = Color(0xFFC8C8C2);
+  static const certificationDivider = Color(0xFFE1E1DC);
+  static const certificationWrongText = Color(0xFF908E8C);
+  static const certificationWrongIcon = Color(0xFFE93131);
+  static const certificationSubmitStart = Color(0xFFFF984B);
+  static const certificationSubmitEnd = Color(0xFFFF5934);
+  static const certificationUploadBackground = Color(0xFFF0F0F0);
+  static const certificationUploadDialogBarrier = Color(0x99000000);
+  static const certificationUploadDialogText = Color(0xFF333333);
+  static const certificationUploadDialogDivider = Color(0xFFE7E7E7);
+  static const certificationUploadDialogCancelText = Color(0xFF999999);
+  static const certificationUploadDialogConfirm = Color(0xFFFF8A2E);
+  static const certificationUploadSuccessBorder = Color(0xFFC7C7C7);
+  static const certificationUploadSuccessInputBorder = Color(0xFFECEDED);
+  static const certificationUploadSuccessLabel = Color(0xFF999999);
+  static const certificationUploadSuccessButton = Color(0xFF3A57B0);
 }

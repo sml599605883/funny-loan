@@ -2,6 +2,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../../../network/api/api_service.dart';
+import '../../../network/errors/network_error_mapper.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../models/app_home_model.dart';
 
@@ -32,8 +33,9 @@ class HomeController extends GetxController {
       EasyLoading.dismiss();
       homeResponse.value = AppHomeModel.fromJson(data);
     } catch (error) {
-      EasyLoading.showError(error.toString());
-      errorMessage.value = error.toString();
+      final message = NetworkErrorMapper.map(error);
+      EasyLoading.showError(message);
+      errorMessage.value = message;
     } finally {
       isLoading.value = false;
     }
@@ -56,7 +58,7 @@ class HomeController extends GetxController {
         EasyLoading.showError('Route unavailable');
       }
     } catch (error) {
-      EasyLoading.showError(error.toString());
+      EasyLoading.showError(NetworkErrorMapper.map(error));
     } finally {
       _isApplyingTopHeroProduct = false;
     }

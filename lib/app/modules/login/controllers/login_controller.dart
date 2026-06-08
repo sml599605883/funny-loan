@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import '../../../core/storage/app_data_store.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/core/common_params_builder.dart';
+import '../../../network/errors/network_error_mapper.dart';
 import '../../../network/network_module.dart';
 import '../../../routes/navigation_helper.dart';
 
@@ -178,12 +179,7 @@ class LoginController extends GetxController {
   }
 
   String _errorMessage(Object error) {
-    final rawMessage = error.toString();
-    final match = RegExp(r'message: (.*)\)$').firstMatch(rawMessage);
-    if (match != null) {
-      return match.group(1) ?? rawMessage;
-    }
-    return rawMessage;
+    return NetworkErrorMapper.map(error);
   }
 
   @override

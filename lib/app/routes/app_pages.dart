@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 import '../modules/certification_step/views/certification_step_page.dart';
+import '../modules/certification_step/views/certification_upload_page.dart';
+import '../modules/certification_step/views/certification_upload_success_page.dart';
 import '../modules/detail/views/detail_page.dart';
 import '../modules/login/controllers/login_controller.dart';
 import '../modules/login/views/login_page.dart';
@@ -40,6 +42,18 @@ class AppPages {
     GetPage(
       name: AppRoutes.certificationStep,
       page: () => const CertificationStepPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationUpload,
+      page: () => const CertificationUploadPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationUploadSuccess,
+      page: () => const CertificationUploadSuccessPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

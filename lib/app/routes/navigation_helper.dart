@@ -56,6 +56,24 @@ class NavigationHelper {
     );
   }
 
+  static Future<T?>? toCertificationUpload<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationUpload,
+      arguments: arguments,
+    );
+  }
+
+  static Future<T?>? toCertificationUploadSuccess<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationUploadSuccess,
+      arguments: arguments,
+    );
+  }
+
   static Future<T?>? toAppPage<T extends Object?>(
     String rawPage, {
     Object? arguments,
