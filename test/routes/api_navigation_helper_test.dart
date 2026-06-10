@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
-
 import 'package:funny_loan/app/core/json/json.dart';
 import 'package:funny_loan/app/network/config/network_config.dart';
 import 'package:funny_loan/app/routes/api_navigation_helper.dart';

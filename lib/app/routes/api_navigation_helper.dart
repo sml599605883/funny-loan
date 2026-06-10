@@ -1,12 +1,28 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../core/json/json.dart';
+import '../core/permissions/app_permission_service.dart';
 import '../core/storage/app_data_store.dart';
 import '../network/api/api_service.dart';
 import '../network/config/network_config.dart';
 import 'navigation_helper.dart';
 import 'navigation_target_mapper.dart';
+
+enum LocationPermissionDialogAction { cancel, settings }
+
+typedef LoginNavigator = Future<void> Function();
+typedef TokenProvider = String Function();
+typedef LocationServiceEnabledProvider = Future<bool> Function();
+typedef RequestLocationPermission = Future<PermissionStatus> Function();
+typedef LocationPermissionDialog =
+    Future<LocationPermissionDialogAction> Function();
+typedef OpenAppSettingsPage = Future<bool> Function();
+typedef ApplyProductRequest =
+    Future<Map<String, dynamic>> Function(String cohabiter, String? allantoins);
 
 class ApiNavigationHelper {
   ApiNavigationHelper._();
@@ -22,6 +38,27 @@ class ApiNavigationHelper {
     Object? detailArguments,
     Future<bool> Function(Uri uri)? urlLauncher,
   }) async {
+    final token = _tokenProvider().trim();
+    if (token.isEmpty) {
+      EasyLoading.dismiss();
+      await NavigationHelper.toLogin();
+      return <String, dynamic>{'handled': true, 'requiresLogin': true};
+    }
+
+    final locationFlowResult = await _ensureLocationReady(
+      locationServiceEnabledProvider: _locationServiceEnabledProvider,
+      requestLocationPermission: AppPermissionService.requestLocationWhenInUse,
+      locationServiceDialog: _showLocationServiceDialog,
+      locationPermissionDialog: _showLocationPermissionDialog,
+      openAppSettingsPage: AppPermissionService.openAppSettingsPage,
+    );
+    if (!locationFlowResult.shouldContinue) {
+      return <String, dynamic>{
+        'handled': false,
+        'interruptedByPermission': true,
+      };
+    }
+
     final response = await _apiService.applyProduct(
       _buildApplyProductBody(cohabiter: cohabiter, allantoins: allantoins),
     );
@@ -163,8 +200,7 @@ class ApiNavigationHelper {
   static Future<Map<String, dynamic>> _dispatchProductDetailDecision(
     Map<String, dynamic> decision, {
     Future<bool> Function(Uri uri)? urlLauncher,
-  }
-  ) async {
+  }) async {
     final productId = _cohabiterFromTarget(
       decision['rawTarget'] as String? ?? '',
     );
@@ -194,7 +230,8 @@ class ApiNavigationHelper {
   }) async {
     final nextStepTarget = (productDetail['nextStepTarget'] as String? ?? '')
         .trim();
-    final nextStepCode = (productDetail['nextStepCode'] as String? ?? '').trim();
+    final nextStepCode = (productDetail['nextStepCode'] as String? ?? '')
+        .trim();
     final nextStepIsNative = productDetail['nextStepIsNative'] == true;
 
     if (nextStepTarget.isNotEmpty) {
@@ -250,7 +287,8 @@ class ApiNavigationHelper {
     }
 
     if (nextStepCode.isNotEmpty) {
-      final handled = NavigationHelper.toAppPage(
+      final handled =
+          NavigationHelper.toAppPage(
             NavigationTargetMapper.normalizeProductDetailAuthItemCode(
               nextStepCode,
             ),
@@ -314,6 +352,16 @@ class ApiNavigationHelper {
     return fetchProductDetail(<String, dynamic>{'cohabiter': cohabiter});
   }
 
+  static Future<Map<String, dynamic>> navigateFromProductDetail(
+    Map<String, dynamic> productDetail, {
+    Future<bool> Function(Uri uri)? urlLauncher,
+  }) {
+    return _dispatchProductDetailNextStep(
+      productDetail,
+      urlLauncher: urlLauncher,
+    );
+  }
+
   static String _cohabiterFromTarget(String rawTarget) {
     final uri = Uri.tryParse(rawTarget.trim());
     return uri?.queryParameters['cohabiter']?.trim() ?? '';
@@ -343,8 +391,96 @@ class ApiNavigationHelper {
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
+  static String _tokenProvider() {
+    return AppDataStore.getPersistentString(AppDataStore.persistedTokenKey) ??
+        '';
+  }
+
+  static Future<bool> _locationServiceEnabledProvider() async {
+    return await Permission.locationWhenInUse.serviceStatus ==
+        ServiceStatus.enabled;
+  }
+
+  static Future<_LocationFlowResult> _ensureLocationReady({
+    required LocationServiceEnabledProvider locationServiceEnabledProvider,
+    required RequestLocationPermission requestLocationPermission,
+    required LocationPermissionDialog locationServiceDialog,
+    required LocationPermissionDialog locationPermissionDialog,
+    required OpenAppSettingsPage openAppSettingsPage,
+  }) async {
+    final serviceEnabled = await locationServiceEnabledProvider();
+    if (!serviceEnabled) {
+      final action = await locationServiceDialog();
+      if (action == LocationPermissionDialogAction.settings) {
+        await openAppSettingsPage();
+        return const _LocationFlowResult(shouldContinue: false);
+      }
+      return const _LocationFlowResult(shouldContinue: true);
+    }
+
+    final permissionStatus = await requestLocationPermission();
+    if (permissionStatus.isGranted) {
+      return const _LocationFlowResult(shouldContinue: true);
+    }
+
+    final action = await locationPermissionDialog();
+    if (action == LocationPermissionDialogAction.settings) {
+      await openAppSettingsPage();
+      return const _LocationFlowResult(shouldContinue: false);
+    }
+    return const _LocationFlowResult(shouldContinue: true);
+  }
+
+  static Future<LocationPermissionDialogAction>
+  _showLocationServiceDialog() async {
+    return _showLocationDialog(
+      title: 'Location service required',
+      message: 'Please enable device location service to continue.',
+    );
+  }
+
+  static Future<LocationPermissionDialogAction>
+  _showLocationPermissionDialog() async {
+    return _showLocationDialog(
+      title: 'Location permission required',
+      message: 'Please enable app location permission to continue.',
+    );
+  }
+
+  static Future<LocationPermissionDialogAction> _showLocationDialog({
+    required String title,
+    required String message,
+  }) async {
+    final result = await Get.dialog<LocationPermissionDialogAction>(
+      AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Get.back(result: LocationPermissionDialogAction.cancel),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Get.back(result: LocationPermissionDialogAction.settings),
+            child: const Text('Settings'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
+    );
+    return result ?? LocationPermissionDialogAction.cancel;
+  }
+
   static ApiService get _apiService => Get.find<ApiService>();
 
   static MutableNetworkState get _networkState =>
       Get.find<MutableNetworkState>();
+}
+
+class _LocationFlowResult {
+  const _LocationFlowResult({required this.shouldContinue});
+
+  final bool shouldContinue;
 }

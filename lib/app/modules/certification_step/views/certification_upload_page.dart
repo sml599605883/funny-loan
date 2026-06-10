@@ -182,7 +182,10 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
                   children: [
                     _CertificationHeader(),
                     SizedBox(height: 16.h),
-                    const CertificationUploadHintBanner(),
+                    const CertificationUploadHintBanner(
+                      scabiosaFieldKey: 'beveling',
+                      text: 'Snap your valid ID Clear photo, quick check',
+                    ),
                     SizedBox(height: 13.h),
                     Container(
                       decoration: BoxDecoration(
@@ -250,7 +253,10 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
     await _uploadSelectedFile(compressedPath, source);
   }
 
-  Future<void> _uploadSelectedFile(String filePath, _UploadSource source) async {
+  Future<void> _uploadSelectedFile(
+    String filePath,
+    _UploadSource source,
+  ) async {
     if (_isUploading) {
       return;
     }
@@ -268,6 +274,7 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
       NavigationHelper.toCertificationUploadSuccess<void>(
         arguments: <String, dynamic>{
           'identityType': _identityType(),
+          'productId': _productId(),
           'result': response.data.mapValue,
         },
       );
@@ -304,6 +311,16 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
     return selectedIdentityValue.isNotEmpty
         ? selectedIdentityValue
         : _payloadString(payloadMap['selectedIdentityTitle']);
+  }
+
+  String _productId() {
+    final arguments = Get.arguments;
+    final routeArguments = arguments is Map
+        ? arguments
+        : const <String, dynamic>{};
+    final payload = routeArguments['payload'];
+    final payloadMap = payload is Map ? payload : const <String, dynamic>{};
+    return _payloadString(payloadMap['productId']);
   }
 
   String _payloadString(Object? value) {

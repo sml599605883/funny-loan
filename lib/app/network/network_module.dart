@@ -8,9 +8,9 @@ import 'api/api_service.dart';
 import 'client/network_client.dart';
 import 'config/network_bootstrapper.dart';
 import 'config/network_config.dart';
+import '../core/native/native_bridge.dart';
 import 'core/auth_expiry_guard.dart';
 import 'core/common_params_provider.dart';
-import 'core/proxy_settings_provider.dart';
 import 'core/response_parser.dart';
 import 'debug/network_proxy_manager.dart';
 import 'utils/crypto_util.dart';
@@ -34,7 +34,7 @@ class NetworkModule {
     if (!kReleaseMode) {
       final systemProxy =
           NetworkProxyManager.proxySettings ??
-          await ProxySettingsProvider.getSystemProxy();
+          await NativeBridge.getSystemProxy();
       final envProxyHost = const String.fromEnvironment('PROXY_HOST');
       final envProxyPort = int.tryParse(
         const String.fromEnvironment('PROXY_PORT'),

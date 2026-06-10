@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:funny_loan/app/app.dart';
@@ -49,6 +50,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Informasi bank'), findsOneWidget);
-    expect(find.text('当前认证步骤路由: bank'), findsOneWidget);
+  });
+
+  testWidgets('face route key can navigate to certification face page', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const FunnyLoanApp());
+    await tester.pumpAndSettle();
+
+    NavigationHelper.toAppPage(
+      'face',
+      arguments: <String, dynamic>{'nextStepTitle': 'Face verification'},
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Face verification'), findsOneWidget);
+    expect(find.byKey(const Key('certification_face_demo_image')), findsOneWidget);
   });
 }

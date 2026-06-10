@@ -73,6 +73,10 @@ void main() {
         'face',
       );
       expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode('Hoarily'),
+        'face',
+      );
+      expect(
         NavigationTargetMapper.normalizeProductDetailAuthItemCode(
           'vaporousnesses',
         ),

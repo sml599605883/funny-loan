@@ -1,4 +1,4 @@
-import '../core/proxy_settings_provider.dart';
+import '../../core/native/native_bridge.dart';
 
 class NetworkProxyManager {
   NetworkProxyManager._();
@@ -8,6 +8,6 @@ class NetworkProxyManager {
   static ProxySettings? get proxySettings => _proxySettings;
 
   static Future<void> syncFromSystemProxy() async {
-    _proxySettings = await ProxySettingsProvider.getSystemProxy();
+    _proxySettings = await NativeBridge.getSystemProxy();
   }
 }

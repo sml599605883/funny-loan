@@ -36,6 +36,7 @@ class NavigationTargetMapper {
         'eidos': 'tax_card',
         'fibromatous': 'id_card_back',
         'accumulators': 'face',
+        'Hoarily': 'face',
         'protyles': 'emergent',
         'orbs': 'education',
         'fragging': 'marriage',

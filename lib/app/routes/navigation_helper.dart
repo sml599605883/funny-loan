@@ -65,6 +65,12 @@ class NavigationHelper {
     );
   }
 
+  static Future<T?>? toCertificationFace<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(AppRoutes.certificationFace, arguments: arguments);
+  }
+
   static Future<T?>? toCertificationUploadSuccess<T extends Object?>({
     Object? arguments,
   }) {
@@ -95,6 +101,10 @@ class NavigationHelper {
       case NavigationTargetMapper.productDetail:
         return toDetail<T>(arguments: arguments);
       default:
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(rawPage) ==
+            'face') {
+          return toCertificationFace<T>(arguments: arguments);
+        }
         if (NavigationTargetMapper.isCertificationStepRouteKey(rawPage)) {
           return toCertificationStep<T>(
             routeKey: NavigationTargetMapper.normalizeProductDetailAuthItemCode(
