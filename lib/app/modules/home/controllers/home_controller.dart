@@ -49,14 +49,8 @@ class HomeController extends GetxController {
     _isApplyingTopHeroProduct = true;
     try {
       EasyLoading.show();
-      final result = await ApiNavigationHelper.applyProductAndNavigate(
-        productId,
-      );
+      await ApiNavigationHelper.applyProductAndNavigate(productId);
       EasyLoading.dismiss();
-      final handled = result['handled'] == true;
-      if (!handled) {
-        EasyLoading.showError('Route unavailable');
-      }
     } catch (error) {
       EasyLoading.showError(NetworkErrorMapper.map(error));
     } finally {

@@ -8,30 +8,26 @@ import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../routes/api_navigation_helper.dart';
-import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 
 typedef CertificationBirthDatePicker =
     Future<String?> Function(BuildContext context, DateTime initialDate);
-typedef CertificationProductDetailFetcher =
-    Future<Map<String, dynamic>> Function(String productId);
-typedef CertificationProductDetailNavigator =
-    Future<Map<String, dynamic>> Function(Map<String, dynamic> productDetail);
+typedef CertificationProductDetailFlowRunner =
+    Future<void> Function(String productId);
 
 class CertificationUploadSuccessPage extends StatefulWidget {
   const CertificationUploadSuccessPage({
     super.key,
     this.apiService,
     this.birthDatePicker = _showCertificationBirthDatePicker,
-    this.productDetailFetcher = ApiNavigationHelper.fetchProductDetailByProductId,
-    this.productDetailNavigator = ApiNavigationHelper.navigateFromProductDetail,
+    this.productDetailFlowRunner =
+        ApiNavigationHelper.fetchProductDetailByProductId,
   });
 
   final ApiService? apiService;
   final CertificationBirthDatePicker birthDatePicker;
-  final CertificationProductDetailFetcher productDetailFetcher;
-  final CertificationProductDetailNavigator productDetailNavigator;
+  final CertificationProductDetailFlowRunner productDetailFlowRunner;
 
   @override
   State<CertificationUploadSuccessPage> createState() =>
@@ -122,8 +118,7 @@ class _CertificationUploadSuccessPageState
       });
       final productId = _pageArgs.productId;
       if (productId.isNotEmpty) {
-        final productDetail = await widget.productDetailFetcher(productId);
-        await widget.productDetailNavigator(productDetail);
+        await widget.productDetailFlowRunner(productId);
       }
       if (!mounted) {
         return;

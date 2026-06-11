@@ -69,12 +69,44 @@ void main() {
         'name',
       );
       expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+          'PaterInstallers',
+        ),
+        'public',
+      );
+      expect(
         NavigationTargetMapper.normalizeProductDetailAuthItemCode('accumulators'),
         'face',
       );
       expect(
         NavigationTargetMapper.normalizeProductDetailAuthItemCode('Hoarily'),
         'face',
+      );
+      expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+          'Impersonality',
+        ),
+        'personal',
+      );
+      expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode('work'),
+        'job',
+      );
+      expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+          'RavenousNonrestrictive',
+        ),
+        'job',
+      );
+      expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode('Taglike'),
+        'ext',
+      );
+      expect(
+        NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+          'SeashoresScarcity',
+        ),
+        'bank',
       );
       expect(
         NavigationTargetMapper.normalizeProductDetailAuthItemCode(

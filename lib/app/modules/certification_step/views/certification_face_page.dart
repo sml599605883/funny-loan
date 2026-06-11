@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -7,15 +10,19 @@ import '../../../core/native/native_bridge.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
+import '../../../network/errors/network_error_mapper.dart';
+import '../../../routes/api_navigation_helper.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 
 typedef CameraPermissionRequester = Future<PermissionStatus> Function();
 typedef AppSettingsOpener = Future<bool> Function();
-typedef FaceTokenFetcher = Future<FaceTokenResult> Function(Map<String, dynamic> body);
+typedef FaceTokenFetcher =
+    Future<FaceTokenResult> Function(Map<String, dynamic> body);
 typedef TrustDecisionLivenessLauncher =
     Future<TrustDecisionLivenessResult> Function(String unwarned);
+typedef FaceImageFilePathBuilder = Future<String> Function(String imageBase64);
 
 class FaceTokenResult {
   const FaceTokenResult({
@@ -36,12 +43,14 @@ class CertificationFacePage extends StatelessWidget {
     this.openAppSettingsPage = AppPermissionService.openAppSettingsPage,
     this.fetchFaceToken = _defaultFetchFaceToken,
     this.showTrustDecisionLiveness = NativeBridge.showTrustDecisionLiveness,
+    this.faceImageFilePathBuilder = _defaultFaceImageFilePathBuilder,
   });
 
   final CameraPermissionRequester requestCameraPermission;
   final AppSettingsOpener openAppSettingsPage;
   final FaceTokenFetcher fetchFaceToken;
   final TrustDecisionLivenessLauncher showTrustDecisionLiveness;
+  final FaceImageFilePathBuilder faceImageFilePathBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -143,8 +152,22 @@ class CertificationFacePage extends StatelessWidget {
             faceTokenResult.unwarned,
           );
           if (result.success) {
-            EasyLoading.showSuccess('Liveness verification succeeded');
-            return;
+            try {
+              await _uploadFaceResult(
+                result: result,
+                unwarned: faceTokenResult.unwarned,
+              );
+              final productId = pageArgs.productId;
+              if (productId.isNotEmpty) {
+                await ApiNavigationHelper.fetchProductDetailByProductId(
+                  productId,
+                );
+              }
+              return;
+            } catch (error) {
+              EasyLoading.showError(NetworkErrorMapper.map(error));
+              return;
+            }
           }
           EasyLoading.showToast(
             result.message.isNotEmpty
@@ -195,14 +218,18 @@ class CertificationFacePage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                debugPrint('CertificationFacePage reupload dialog cancel tapped');
+                debugPrint(
+                  'CertificationFacePage reupload dialog cancel tapped',
+                );
                 Navigator.of(dialogContext).pop();
               },
               child: const Text('Cancel'),
             ),
             TextButton(
               onPressed: () {
-                debugPrint('CertificationFacePage reupload dialog upload tapped');
+                debugPrint(
+                  'CertificationFacePage reupload dialog upload tapped',
+                );
                 Navigator.of(dialogContext).pop();
               },
               child: const Text('Upload'),
@@ -211,6 +238,44 @@ class CertificationFacePage extends StatelessWidget {
         );
       },
     );
+  }
+
+  Future<void> _uploadFaceResult({
+    required TrustDecisionLivenessResult result,
+    required String unwarned,
+  }) async {
+    final imageBase64 = result.image.trim();
+    if (imageBase64.isEmpty) {
+      throw const FormatException('Missing liveness image');
+    }
+
+    final filePath = await faceImageFilePathBuilder(imageBase64);
+    await Get.find<ApiService>().uploadIdentityOrFace(
+      body: <String, dynamic>{
+        'outcrop': '10',
+        'blessedness': '1',
+        'impotencies': '',
+        'shammying': result.livenessId.trim(),
+        'rapaciousness': unwarned.trim(),
+        'draggingly': '7',
+        'workbook': '',
+      },
+      filePath: filePath,
+    );
+  }
+
+  static Future<String> _defaultFaceImageFilePathBuilder(
+    String imageBase64,
+  ) async {
+    final normalized = imageBase64.contains(',')
+        ? imageBase64.split(',').last
+        : imageBase64;
+    final bytes = base64Decode(normalized);
+    final file = File(
+      '${Directory.systemTemp.path}/certification_face_${DateTime.now().microsecondsSinceEpoch}.jpg',
+    );
+    await file.writeAsBytes(bytes, flush: true);
+    return file.path;
   }
 
   static Future<FaceTokenResult> _defaultFetchFaceToken(
@@ -336,4 +401,6 @@ class _CertificationFaceArgs {
   }
 
   Map<String, dynamic> get faceTokenRequestBody => payloadMap;
+
+  String get productId => (payloadMap['productId'] as String? ?? '').trim();
 }

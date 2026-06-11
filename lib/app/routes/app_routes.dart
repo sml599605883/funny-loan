@@ -8,4 +8,5 @@ abstract class AppRoutes {
   static const certificationUpload = '/certification-upload';
   static const certificationFace = '/certification-face';
   static const certificationUploadSuccess = '/certification-upload-success';
+  static const certificationPersonalInfo = '/certification-personal-info';
 }

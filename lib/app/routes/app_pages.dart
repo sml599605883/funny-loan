@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../modules/certification_step/views/certification_step_page.dart';
 import '../modules/certification_step/views/certification_face_page.dart';
+import '../modules/certification_step/views/certification_personal_info_page.dart';
 import '../modules/certification_step/views/certification_upload_page.dart';
 import '../modules/certification_step/views/certification_upload_success_page.dart';
 import '../modules/detail/views/detail_page.dart';
@@ -61,6 +62,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.certificationUploadSuccess,
       page: () => const CertificationUploadSuccessPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationPersonalInfo,
+      page: () => const CertificationPersonalInfoPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

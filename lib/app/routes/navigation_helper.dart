@@ -34,9 +34,7 @@ class NavigationHelper {
     return Get.toNamed<T>(AppRoutes.setting);
   }
 
-  static Future<T?>? toOrderList<T extends Object?>({
-    int initialTab = 0,
-  }) {
+  static Future<T?>? toOrderList<T extends Object?>({int initialTab = 0}) {
     return Get.toNamed<T>(
       AppRoutes.orderList,
       arguments: <String, dynamic>{'initialTab': initialTab},
@@ -49,20 +47,14 @@ class NavigationHelper {
   }) {
     return Get.toNamed<T>(
       AppRoutes.certificationStep,
-      arguments: <String, dynamic>{
-        'routeKey': routeKey,
-        'payload': arguments,
-      },
+      arguments: <String, dynamic>{'routeKey': routeKey, 'payload': arguments},
     );
   }
 
   static Future<T?>? toCertificationUpload<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
-      AppRoutes.certificationUpload,
-      arguments: arguments,
-    );
+    return Get.toNamed<T>(AppRoutes.certificationUpload, arguments: arguments);
   }
 
   static Future<T?>? toCertificationFace<T extends Object?>({
@@ -77,6 +69,15 @@ class NavigationHelper {
     return Get.toNamed<T>(
       AppRoutes.certificationUploadSuccess,
       arguments: arguments,
+    );
+  }
+
+  static Future<T?>? toCertificationPersonalInfo<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationPersonalInfo,
+      arguments: _normalizeCertificationPayloadArguments(arguments),
     );
   }
 
@@ -101,19 +102,54 @@ class NavigationHelper {
       case NavigationTargetMapper.productDetail:
         return toDetail<T>(arguments: arguments);
       default:
-        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(rawPage) ==
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
             'face') {
-          return toCertificationFace<T>(arguments: arguments);
+          return toCertificationFace<T>(
+            arguments: _normalizeCertificationPayloadArguments(arguments),
+          );
+        }
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
+            'personal') {
+          return toCertificationPersonalInfo<T>(arguments: arguments);
         }
         if (NavigationTargetMapper.isCertificationStepRouteKey(rawPage)) {
           return toCertificationStep<T>(
             routeKey: NavigationTargetMapper.normalizeProductDetailAuthItemCode(
               rawPage,
             ),
-            arguments: arguments,
+            arguments: _unwrapCertificationPayload(arguments),
           );
         }
         return null;
     }
+  }
+
+  static Map<String, dynamic> _normalizeCertificationPayloadArguments(
+    Object? arguments,
+  ) {
+    final routeArguments = arguments is Map
+        ? Map<String, dynamic>.from(arguments)
+        : <String, dynamic>{};
+    final payload = routeArguments['payload'];
+    if (payload is Map) {
+      return routeArguments;
+    }
+    return <String, dynamic>{'payload': routeArguments};
+  }
+
+  static Object? _unwrapCertificationPayload(Object? arguments) {
+    if (arguments is! Map) {
+      return arguments;
+    }
+    final routeArguments = Map<String, dynamic>.from(arguments);
+    final payload = routeArguments['payload'];
+    if (payload is Map) {
+      return Map<String, dynamic>.from(payload);
+    }
+    return routeArguments;
   }
 }
