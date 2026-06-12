@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -12,6 +10,13 @@ import '../../../routes/api_navigation_helper.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
+import '../models/address_option.dart';
+import '../models/address_selection.dart';
+import '../models/certification_personal_info_args.dart';
+import '../models/personal_info_field_data.dart';
+import '../models/personal_info_field_option.dart';
+import 'widgets/address_selection_sheet.dart';
+import 'widgets/enum_selection_sheet.dart';
 
 typedef PersonalInfoProductDetailFlowRunner =
     Future<void> Function(String productId);
@@ -36,11 +41,11 @@ class _CertificationPersonalInfoPageState
     extends State<CertificationPersonalInfoPage> {
   late final ApiService _apiService =
       widget.apiService ?? Get.find<ApiService>();
-  late final _CertificationPersonalInfoArgs _pageArgs =
-      _CertificationPersonalInfoArgs.from(Get.arguments);
-  List<_PersonalInfoFieldData> _fields = const <_PersonalInfoFieldData>[];
-  List<_PersonalAddressOption>? _cachedAddressOptions;
-  Future<List<_PersonalAddressOption>>? _addressOptionsFuture;
+  late final CertificationPersonalInfoArgs _pageArgs =
+      CertificationPersonalInfoArgs.from(Get.arguments);
+  List<PersonalInfoFieldData> _fields = const <PersonalInfoFieldData>[];
+  List<AddressOption>? _cachedAddressOptions;
+  Future<List<AddressOption>>? _addressOptionsFuture;
   bool _isLoading = true;
   bool _isSubmitting = false;
   String _errorMessage = '';
@@ -214,25 +219,25 @@ class _CertificationPersonalInfoPageState
     }
   }
 
-  List<_PersonalInfoFieldData> _parseFields(Object? raw) {
+  List<PersonalInfoFieldData> _parseFields(Object? raw) {
     final json = Json(raw);
     final fields = json['rekeys']['tingling'].listValue.isNotEmpty
         ? json['rekeys']['tingling'].listValue
         : json['tingling'].listValue;
     return fields
-        .map(_PersonalInfoFieldData.fromJson)
+        .map(PersonalInfoFieldData.fromJson)
         .where((field) => field.label.isNotEmpty && field.saveKey.isNotEmpty)
         .toList();
   }
 
-  void _replaceFields(List<_PersonalInfoFieldData> nextFields) {
+  void _replaceFields(List<PersonalInfoFieldData> nextFields) {
     for (final field in _fields) {
       field.dispose();
     }
     _fields = nextFields;
   }
 
-  Future<void> _handleFieldTap(_PersonalInfoFieldData field) async {
+  Future<void> _handleFieldTap(PersonalInfoFieldData field) async {
     if (field.isTextInput) {
       return;
     }
@@ -250,13 +255,13 @@ class _CertificationPersonalInfoPageState
       return;
     }
 
-    final selectedOption = await showModalBottomSheet<_PersonalInfoFieldOption>(
+    final selectedOption = await showModalBottomSheet<PersonalInfoFieldOption>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: AppColors.certificationUploadDialogBarrier,
       builder: (sheetContext) {
-        return _PersonalEnumSelectionSheet(
+        return EnumSelectionSheet(
           options: field.options,
           currentValue: field.currentSubmitValue,
         );
@@ -270,7 +275,7 @@ class _CertificationPersonalInfoPageState
     });
   }
 
-  Future<void> _handleAddressFieldTap(_PersonalInfoFieldData field) async {
+  Future<void> _handleAddressFieldTap(PersonalInfoFieldData field) async {
     final shouldShowLoading =
         _cachedAddressOptions == null && _addressOptionsFuture == null;
     try {
@@ -293,13 +298,13 @@ class _CertificationPersonalInfoPageState
         return;
       }
       final selectedAddress =
-          await showModalBottomSheet<_PersonalAddressSelection>(
+          await showModalBottomSheet<AddressSelection>(
             context: context,
             isScrollControlled: true,
             backgroundColor: Colors.transparent,
             barrierColor: AppColors.certificationUploadDialogBarrier,
             builder: (sheetContext) {
-              return _PersonalAddressSheet(
+              return AddressSelectionSheet(
                 title: field.label,
                 options: addressOptions,
                 currentValue: field.controller.text.trim(),
@@ -324,13 +329,13 @@ class _CertificationPersonalInfoPageState
   }
 
   void _prefetchAddressOptions() {
-    _getAddressOptions().catchError((_) {});
+    _getAddressOptions().catchError((_) => <AddressOption>[]);
   }
 
-  Future<List<_PersonalAddressOption>> _getAddressOptions() {
+  Future<List<AddressOption>> _getAddressOptions() {
     final cached = _cachedAddressOptions;
     if (cached != null && cached.isNotEmpty) {
-      return Future<List<_PersonalAddressOption>>.value(cached);
+      return Future<List<AddressOption>>.value(cached);
     }
     final inFlight = _addressOptionsFuture;
     if (inFlight != null) {
@@ -341,10 +346,10 @@ class _CertificationPersonalInfoPageState
     return future;
   }
 
-  Future<List<_PersonalAddressOption>> _fetchAddressOptions() async {
+  Future<List<AddressOption>> _fetchAddressOptions() async {
     try {
       final response = await _apiService.fetchAddressOptions();
-      final addressOptions = _PersonalAddressOption.parseList(response.data);
+      final addressOptions = AddressOption.parseList(response.data);
       _cachedAddressOptions = addressOptions;
       return addressOptions;
     } finally {
@@ -380,37 +385,6 @@ class _CertificationPersonalInfoPageState
       }
     }
   }
-}
-
-class _CertificationPersonalInfoArgs {
-  const _CertificationPersonalInfoArgs({
-    required this.title,
-    required this.payloadMap,
-  });
-
-  factory _CertificationPersonalInfoArgs.from(Object? arguments) {
-    final routeArguments = arguments is Map
-        ? arguments
-        : const <String, dynamic>{};
-    final payload = routeArguments['payload'];
-    final payloadMap = payload is Map ? payload : const <String, dynamic>{};
-    return _CertificationPersonalInfoArgs(
-      title: (payloadMap['nextStepTitle'] as String? ?? '').trim(),
-      payloadMap: Map<String, dynamic>.from(payloadMap),
-    );
-  }
-
-  final String title;
-  final Map<String, dynamic> payloadMap;
-
-  String get displayTitle {
-    if (title.isNotEmpty) {
-      return title;
-    }
-    return 'Personal information';
-  }
-
-  String get productId => (payloadMap['productId'] as String? ?? '').trim();
 }
 
 class _PersonalInfoHeader extends StatelessWidget {
@@ -476,7 +450,7 @@ class _PersonalInfoProgress extends StatelessWidget {
 class _PersonalInfoField extends StatelessWidget {
   const _PersonalInfoField({required this.field, required this.onTap});
 
-  final _PersonalInfoFieldData field;
+  final PersonalInfoFieldData field;
   final VoidCallback onTap;
 
   @override
@@ -599,140 +573,6 @@ class _PersonalInfoFieldContainer extends StatelessWidget {
   }
 }
 
-class _PersonalInfoFieldData {
-  _PersonalInfoFieldData({
-    required this.label,
-    required this.placeholder,
-    required this.saveKey,
-    required this.fieldType,
-    required this.isNumeric,
-    required this.options,
-    required this.controller,
-    required this.selectedValue,
-  });
-
-  factory _PersonalInfoFieldData.fromJson(Object? raw) {
-    final json = Json(raw);
-    final options = _PersonalInfoFieldOption.parseList(json['scabiosa']);
-    final initialValue = _stringifyValue(json['disrelished'].rawValue).trim();
-    final matchedOption = _matchOption(options, initialValue);
-    return _PersonalInfoFieldData(
-      label: json['hazinesses'].stringValue.trim(),
-      placeholder: json['tissual'].stringValue.trim(),
-      saveKey: json['unplait'].stringValue.trim(),
-      fieldType: _PersonalInfoFieldType.fromRaw(
-        json['dulses'].stringValue.trim(),
-      ),
-      isNumeric: json['dominances'].intValue == 1,
-      options: options,
-      controller: TextEditingController(
-        text: matchedOption?.label ?? initialValue,
-      ),
-      selectedValue: matchedOption?.value ?? initialValue,
-    );
-  }
-
-  final String label;
-  final String placeholder;
-  final String saveKey;
-  final _PersonalInfoFieldType fieldType;
-  final bool isNumeric;
-  final List<_PersonalInfoFieldOption> options;
-  final TextEditingController controller;
-  String selectedValue;
-
-  bool get isTextInput => fieldType == _PersonalInfoFieldType.text;
-
-  bool get isCitySelect => fieldType == _PersonalInfoFieldType.citySelect;
-
-  bool get isSelectable => !isTextInput;
-
-  bool get hasValue => currentSubmitValue.isNotEmpty;
-
-  String get currentSubmitValue {
-    if (isSelectable) {
-      final matched = _matchOption(options, controller.text.trim());
-      if (matched != null) {
-        return matched.value;
-      }
-      return selectedValue.trim();
-    }
-    return controller.text.trim();
-  }
-
-  String get displayText {
-    final text = controller.text.trim();
-    if (text.isNotEmpty) {
-      return text;
-    }
-    if (placeholder.isNotEmpty) {
-      return placeholder;
-    }
-    return 'Please enter';
-  }
-
-  void selectOption(_PersonalInfoFieldOption option) {
-    selectedValue = option.value;
-    controller.text = option.label;
-  }
-
-  void selectAddress(_PersonalAddressSelection selection) {
-    selectedValue = selection.value;
-    controller.text = selection.label;
-  }
-
-  void dispose() {
-    controller.dispose();
-  }
-
-  static _PersonalInfoFieldOption? _matchOption(
-    List<_PersonalInfoFieldOption> options,
-    String rawValue,
-  ) {
-    final value = rawValue.trim().toLowerCase();
-    if (value.isEmpty) {
-      return null;
-    }
-    for (final option in options) {
-      if (option.value.trim().toLowerCase() == value ||
-          option.label.trim().toLowerCase() == value) {
-        return option;
-      }
-    }
-    return null;
-  }
-
-  static String _stringifyValue(Object? value) {
-    if (value == null) {
-      return '';
-    }
-    if (value is String) {
-      return value;
-    }
-    return '$value';
-  }
-}
-
-enum _PersonalInfoFieldType {
-  text,
-  enumeration,
-  citySelect,
-  unknown;
-
-  static _PersonalInfoFieldType fromRaw(String rawType) {
-    switch (rawType.trim()) {
-      case 'Craniosacral':
-        return _PersonalInfoFieldType.text;
-      case 'Ataractics':
-        return _PersonalInfoFieldType.enumeration;
-      case 'RestroomInefficacies':
-        return _PersonalInfoFieldType.citySelect;
-      default:
-        return _PersonalInfoFieldType.unknown;
-    }
-  }
-}
-
 class _PersonalInfoSubmitButton extends StatelessWidget {
   const _PersonalInfoSubmitButton({
     required this.isSubmitting,
@@ -775,911 +615,4 @@ class _PersonalInfoSubmitButton extends StatelessWidget {
       ),
     );
   }
-}
-
-class _PersonalInfoFieldOption {
-  const _PersonalInfoFieldOption({
-    required this.label,
-    required this.value,
-    required this.logoUrl,
-  });
-
-  final String label;
-  final String value;
-  final String logoUrl;
-
-  static List<_PersonalInfoFieldOption> parseList(Json json) {
-    final result = <_PersonalInfoFieldOption>[];
-    if (json.listValue.isNotEmpty) {
-      for (final item in json.listValue) {
-        final option = _fromDynamic(item);
-        if (option != null) {
-          result.add(option);
-        }
-      }
-      return result;
-    }
-
-    final mapValue = json.mapValue;
-    if (mapValue.isNotEmpty) {
-      mapValue.forEach((key, value) {
-        final option = _normalize(
-          label: value is String ? value.trim() : '$value'.trim(),
-          value: key.trim(),
-        );
-        if (option != null) {
-          result.add(option);
-        }
-      });
-      return result;
-    }
-
-    final raw = json.stringValue.trim();
-    if (raw.isEmpty) {
-      return result;
-    }
-    for (final segment in raw.split(',')) {
-      final option = _normalize(label: segment.trim(), value: segment.trim());
-      if (option != null) {
-        result.add(option);
-      }
-    }
-    return result;
-  }
-
-  static _PersonalInfoFieldOption? _fromDynamic(Object? raw) {
-    if (raw == null) {
-      return null;
-    }
-    if (raw is String) {
-      return _normalize(label: raw.trim(), value: raw.trim());
-    }
-
-    final json = Json(raw);
-    final label = <String>[
-      json['governmental'].stringValue.trim(),
-      json['hazinesses'].stringValue.trim(),
-      json['reallot'].stringValue.trim(),
-      json['label'].stringValue.trim(),
-      json['name'].stringValue.trim(),
-      json['title'].stringValue.trim(),
-      json['text'].stringValue.trim(),
-      json['value'].stringValue.trim(),
-    ].firstWhere((item) => item.isNotEmpty, orElse: () => '');
-    final value = <String>[
-      json['outcrop'].stringValue.trim(),
-      json['value'].stringValue.trim(),
-      json['code'].stringValue.trim(),
-      json['id'].stringValue.trim(),
-      json['key'].stringValue.trim(),
-      json['unplait'].stringValue.trim(),
-      json['name'].stringValue.trim(),
-      json['title'].stringValue.trim(),
-      json['label'].stringValue.trim(),
-      label,
-    ].firstWhere((item) => item.isNotEmpty, orElse: () => '');
-    return _normalize(
-      label: label,
-      value: value,
-      logoUrl: json['euchromatic'].stringValue.trim(),
-    );
-  }
-
-  static _PersonalInfoFieldOption? _normalize({
-    required String label,
-    required String value,
-    String logoUrl = '',
-  }) {
-    final normalizedLabel = label.trim();
-    final normalizedValue = value.trim();
-    if (normalizedLabel.isEmpty && normalizedValue.isEmpty) {
-      return null;
-    }
-    return _PersonalInfoFieldOption(
-      label: normalizedLabel.isNotEmpty ? normalizedLabel : normalizedValue,
-      value: normalizedValue.isNotEmpty ? normalizedValue : normalizedLabel,
-      logoUrl: logoUrl.trim(),
-    );
-  }
-}
-
-class _PersonalEnumSelectionSheet extends StatefulWidget {
-  const _PersonalEnumSelectionSheet({
-    required this.options,
-    required this.currentValue,
-  });
-
-  final List<_PersonalInfoFieldOption> options;
-  final String currentValue;
-
-  @override
-  State<_PersonalEnumSelectionSheet> createState() =>
-      _PersonalEnumSelectionSheetState();
-}
-
-class _PersonalEnumSelectionSheetState
-    extends State<_PersonalEnumSelectionSheet> {
-  late _PersonalInfoFieldOption _selectedOption = _initialSelectedOption();
-
-  _PersonalInfoFieldOption _initialSelectedOption() {
-    final normalizedCurrentValue = widget.currentValue.trim().toLowerCase();
-    if (normalizedCurrentValue.isEmpty) {
-      return widget.options.first;
-    }
-    return widget.options.firstWhere(
-      (option) =>
-          option.value.trim().toLowerCase() == normalizedCurrentValue ||
-          option.label.trim().toLowerCase() == normalizedCurrentValue,
-      orElse: () => widget.options.first,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final availableListHeight =
-        MediaQuery.sizeOf(context).height -
-        MediaQuery.paddingOf(context).vertical -
-        140.h;
-    final maxVisibleOptionsHeight = 326.h;
-    final maxListHeight = math.min(
-      availableListHeight,
-      maxVisibleOptionsHeight,
-    );
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: ScreenAdapter.edgeInsetsOnly(left: 15, right: 15, bottom: 21),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: ScreenAdapter.edgeInsetsOnly(
-                left: 9,
-                top: 22,
-                right: 10,
-                bottom: 21,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15.r),
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: maxListHeight),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: widget.options.length,
-                  separatorBuilder: (context, index) => Padding(
-                    padding: ScreenAdapter.edgeInsetsOnly(top: 21, bottom: 21),
-                    child: Container(
-                      width: double.infinity,
-                      height: 2.h,
-                      color: AppColors.certificationUploadDialogDivider,
-                    ),
-                  ),
-                  itemBuilder: (context, index) {
-                    final option = widget.options[index];
-                    return _PersonalEnumOptionRow(
-                      option: option,
-                      isSelected: option.value == _selectedOption.value,
-                      onTap: () => setState(() => _selectedOption = option),
-                    );
-                  },
-                ),
-              ),
-            ),
-            SizedBox(height: 14.h),
-            Row(
-              children: [
-                Expanded(
-                  child: _PersonalEnumActionButton(
-                    title: 'Cancel',
-                    textColor: AppColors.certificationUploadDialogCancelText,
-                    backgroundColor: Colors.white,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: _PersonalEnumActionButton(
-                    title: 'Done',
-                    textColor: Colors.white,
-                    backgroundColor: AppColors.certificationUploadDialogConfirm,
-                    fontWeight: FontWeight.w700,
-                    onTap: () => Navigator.of(context).pop(_selectedOption),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PersonalEnumOptionRow extends StatelessWidget {
-  const _PersonalEnumOptionRow({
-    required this.option,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final _PersonalInfoFieldOption option;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Padding(
-        padding: ScreenAdapter.edgeInsetsOnly(left: 11, right: 6),
-        child: Row(
-          children: [
-            if (option.logoUrl.isNotEmpty) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8.r),
-                child: Image.network(
-                  option.logoUrl,
-                  width: 30.w,
-                  height: 30.h,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const SizedBox.shrink(),
-                ),
-              ),
-              SizedBox(width: 15.w),
-            ],
-            Expanded(
-              child: Text(
-                option.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.certificationUploadDialogText,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 22 / 18,
-                ),
-              ),
-            ),
-            if (isSelected) const _PersonalEnumSelectedIndicator(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PersonalEnumSelectedIndicator extends StatelessWidget {
-  const _PersonalEnumSelectedIndicator();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      'assets/certification/check_icon.png',
-      width: 20.w,
-      height: 20.h,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => Icon(
-        Icons.check_circle,
-        size: 20.w,
-        color: AppColors.certificationUploadDialogConfirm,
-      ),
-    );
-  }
-}
-
-class _PersonalEnumActionButton extends StatelessWidget {
-  const _PersonalEnumActionButton({
-    required this.title,
-    required this.textColor,
-    required this.backgroundColor,
-    required this.onTap,
-    this.fontWeight = FontWeight.w400,
-  });
-
-  final String title;
-  final Color textColor;
-  final Color backgroundColor;
-  final VoidCallback onTap;
-  final FontWeight fontWeight;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        height: 48.h,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: backgroundColor,
-          borderRadius: BorderRadius.circular(15.r),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 18.sp,
-            fontWeight: fontWeight,
-            height: 22 / 18,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PersonalAddressSheet extends StatefulWidget {
-  const _PersonalAddressSheet({
-    required this.title,
-    required this.options,
-    required this.currentValue,
-  });
-
-  final String title;
-  final List<_PersonalAddressOption> options;
-  final String currentValue;
-
-  @override
-  State<_PersonalAddressSheet> createState() => _PersonalAddressSheetState();
-}
-
-enum _PersonalAddressLevel { region, province, municipality }
-
-class _PersonalAddressSheetState extends State<_PersonalAddressSheet> {
-  int _selectedProvinceIndex = 0;
-  int _selectedCityIndex = 0;
-  int _selectedDistrictIndex = 0;
-  _PersonalAddressLevel _activeLevel = _PersonalAddressLevel.region;
-  _PersonalAddressLevel _maxReachedLevel = _PersonalAddressLevel.region;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncInitialSelection();
-  }
-
-  void _syncInitialSelection() {
-    final parts = widget.currentValue
-        .split('-')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-    if (parts.isEmpty || widget.options.isEmpty) {
-      return;
-    }
-    final provinceIndex = widget.options.indexWhere(
-      (option) => option.label == parts.first,
-    );
-    if (provinceIndex < 0) {
-      return;
-    }
-    _selectedProvinceIndex = provinceIndex;
-    final cities = widget.options[provinceIndex].children;
-    if (parts.length < 2 || cities.isEmpty) {
-      return;
-    }
-    final cityIndex = cities.indexWhere((option) => option.label == parts[1]);
-    if (cityIndex < 0) {
-      return;
-    }
-    _selectedCityIndex = cityIndex;
-    final districts = cities[cityIndex].children;
-    if (parts.length < 3 || districts.isEmpty) {
-      _maxReachedLevel = _PersonalAddressLevel.province;
-      return;
-    }
-    final districtIndex = districts.indexWhere(
-      (option) => option.label == parts[2],
-    );
-    if (districtIndex >= 0) {
-      _selectedDistrictIndex = districtIndex;
-      _maxReachedLevel = _PersonalAddressLevel.municipality;
-      return;
-    }
-    _maxReachedLevel = _PersonalAddressLevel.province;
-  }
-
-  void _handleLevelTap(int index) {
-    switch (_activeLevel) {
-      case _PersonalAddressLevel.region:
-        setState(() {
-          _selectedProvinceIndex = index;
-          _selectedCityIndex = 0;
-          _selectedDistrictIndex = 0;
-        });
-      case _PersonalAddressLevel.province:
-        setState(() {
-          _selectedCityIndex = index;
-          _selectedDistrictIndex = 0;
-        });
-      case _PersonalAddressLevel.municipality:
-        setState(() => _selectedDistrictIndex = index);
-    }
-  }
-
-  void _handleDoneTap() {
-    switch (_activeLevel) {
-      case _PersonalAddressLevel.region:
-        setState(() {
-          _activeLevel = _PersonalAddressLevel.province;
-          _maxReachedLevel = _PersonalAddressLevel.province;
-        });
-      case _PersonalAddressLevel.province:
-        final selectedProvince = widget.options[_selectedProvinceIndex];
-        final cities = selectedProvince.children;
-        if (cities.isEmpty ||
-            cities[math.min(_selectedCityIndex, cities.length - 1)]
-                .children
-                .isEmpty) {
-          Navigator.of(context).pop(_buildSelection());
-          return;
-        }
-        setState(() {
-          _activeLevel = _PersonalAddressLevel.municipality;
-          _maxReachedLevel = _PersonalAddressLevel.municipality;
-        });
-      case _PersonalAddressLevel.municipality:
-        Navigator.of(context).pop(_buildSelection());
-    }
-  }
-
-  void _handleSegmentTap(_PersonalAddressLevel level) {
-    if (!_canTapLevel(level)) {
-      return;
-    }
-    setState(() {
-      switch (level) {
-        case _PersonalAddressLevel.region:
-          _selectedCityIndex = 0;
-          _selectedDistrictIndex = 0;
-          _activeLevel = _PersonalAddressLevel.region;
-          _maxReachedLevel = _PersonalAddressLevel.region;
-        case _PersonalAddressLevel.province:
-          _selectedDistrictIndex = 0;
-          _activeLevel = _PersonalAddressLevel.province;
-          _maxReachedLevel = _PersonalAddressLevel.province;
-        case _PersonalAddressLevel.municipality:
-          _activeLevel = _PersonalAddressLevel.municipality;
-      }
-    });
-  }
-
-  bool _canTapLevel(_PersonalAddressLevel level) {
-    return _levelRank(level) <= _levelRank(_maxReachedLevel);
-  }
-
-  int _levelRank(_PersonalAddressLevel level) {
-    switch (level) {
-      case _PersonalAddressLevel.region:
-        return 0;
-      case _PersonalAddressLevel.province:
-        return 1;
-      case _PersonalAddressLevel.municipality:
-        return 2;
-    }
-  }
-
-  String _segmentTitle(_PersonalAddressLevel level) {
-    final selectedProvince = widget.options[_selectedProvinceIndex];
-    switch (level) {
-      case _PersonalAddressLevel.region:
-        return _maxReachedLevel == _PersonalAddressLevel.region
-            ? 'Region'
-            : selectedProvince.label;
-      case _PersonalAddressLevel.province:
-        if (_maxReachedLevel == _PersonalAddressLevel.region) {
-          return 'Province';
-        }
-        final cities = selectedProvince.children;
-        if (cities.isEmpty) {
-          return 'Province';
-        }
-        return cities[math.min(_selectedCityIndex, cities.length - 1)].label;
-      case _PersonalAddressLevel.municipality:
-        if (_maxReachedLevel != _PersonalAddressLevel.municipality) {
-          return 'Municipality';
-        }
-        final cities = selectedProvince.children;
-        if (cities.isEmpty) {
-          return 'Municipality';
-        }
-        final districts =
-            cities[math.min(_selectedCityIndex, cities.length - 1)].children;
-        if (districts.isEmpty) {
-          return 'Municipality';
-        }
-        return districts[math.min(_selectedDistrictIndex, districts.length - 1)]
-            .label;
-    }
-  }
-
-  _PersonalAddressSelection _buildSelection() {
-    final selectedProvince = widget.options[_selectedProvinceIndex];
-    final cities = selectedProvince.children;
-    if (cities.isEmpty) {
-      return _PersonalAddressSelection(
-        label: selectedProvince.label,
-        value: selectedProvince.label,
-      );
-    }
-    final selectedCity =
-        cities[math.min(_selectedCityIndex, cities.length - 1)];
-    final districts = selectedCity.children;
-    if (districts.isEmpty) {
-      final value = '${selectedProvince.label}-${selectedCity.label}';
-      return _PersonalAddressSelection(label: value, value: value);
-    }
-    final selectedDistrict =
-        districts[math.min(_selectedDistrictIndex, districts.length - 1)];
-    final value =
-        '${selectedProvince.label}-${selectedCity.label}-${selectedDistrict.label}';
-    return _PersonalAddressSelection(label: value, value: value);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final selectedProvince = widget.options[_selectedProvinceIndex];
-    final cities = selectedProvince.children;
-    final selectedCity = cities.isEmpty ? null : cities[_selectedCityIndex];
-    final districts = selectedCity?.children ?? const <_PersonalAddressNode>[];
-    final activeOptions = switch (_activeLevel) {
-      _PersonalAddressLevel.region => widget.options,
-      _PersonalAddressLevel.province => cities,
-      _PersonalAddressLevel.municipality => districts,
-    };
-    final selectedIndex = switch (_activeLevel) {
-      _PersonalAddressLevel.region => _selectedProvinceIndex,
-      _PersonalAddressLevel.province => _selectedCityIndex,
-      _PersonalAddressLevel.municipality => _selectedDistrictIndex,
-    };
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: ScreenAdapter.edgeInsetsOnly(left: 15, right: 15, bottom: 22),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15.r),
-              ),
-              child: Padding(
-                padding: ScreenAdapter.edgeInsetsOnly(
-                  left: 9,
-                  top: 15,
-                  right: 10,
-                  bottom: 25,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _PersonalAddressSegment(
-                      activeLevel: _activeLevel,
-                      maxReachedLevel: _maxReachedLevel,
-                      regionTitle: _segmentTitle(_PersonalAddressLevel.region),
-                      provinceTitle: _segmentTitle(
-                        _PersonalAddressLevel.province,
-                      ),
-                      municipalityTitle: _segmentTitle(
-                        _PersonalAddressLevel.municipality,
-                      ),
-                      onLevelChanged: _handleSegmentTap,
-                    ),
-                    SizedBox(height: 31.h),
-                    ConstrainedBox(
-                      constraints: BoxConstraints(maxHeight: 284.h),
-                      child: _PersonalAddressColumn(
-                        options: activeOptions,
-                        selectedIndex: selectedIndex,
-                        onTap: _handleLevelTap,
-                        showSelectedIndicator: true,
-                        dividerColor:
-                            AppColors.certificationUploadDialogDivider,
-                        textColor: AppColors.certificationUploadDialogText,
-                        selectedFontWeight: FontWeight.w400,
-                        itemPadding: ScreenAdapter.edgeInsetsOnly(
-                          left: 29,
-                          right: 29,
-                          top: 24,
-                          bottom: 24,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: 14.h),
-            Row(
-              children: [
-                Expanded(
-                  child: _PersonalEnumActionButton(
-                    title: 'Cancel',
-                    textColor: AppColors.certificationUploadDialogCancelText,
-                    backgroundColor: Colors.white,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                ),
-                SizedBox(width: 20.w),
-                Expanded(
-                  child: _PersonalEnumActionButton(
-                    title: 'Done',
-                    textColor: Colors.white,
-                    backgroundColor: AppColors.certificationUploadDialogConfirm,
-                    fontWeight: FontWeight.w700,
-                    onTap: _handleDoneTap,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PersonalAddressSegment extends StatelessWidget {
-  const _PersonalAddressSegment({
-    required this.activeLevel,
-    required this.maxReachedLevel,
-    required this.regionTitle,
-    required this.provinceTitle,
-    required this.municipalityTitle,
-    required this.onLevelChanged,
-  });
-
-  final _PersonalAddressLevel activeLevel;
-  final _PersonalAddressLevel maxReachedLevel;
-  final String regionTitle;
-  final String provinceTitle;
-  final String municipalityTitle;
-  final ValueChanged<_PersonalAddressLevel> onLevelChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 38.h,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18.r),
-        border: Border.all(color: const Color(0xFFF0F0F0)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _PersonalAddressSegmentItem(
-              itemKey: const Key('personal_address_segment_region'),
-              title: regionTitle,
-              isActive: activeLevel == _PersonalAddressLevel.region,
-              isLeading: true,
-              isEnabled:
-                  _levelRank(_PersonalAddressLevel.region) <=
-                  _levelRank(maxReachedLevel),
-              onTap: () => onLevelChanged(_PersonalAddressLevel.region),
-            ),
-          ),
-          Container(width: 1.w, color: const Color(0xFFF0F0F0)),
-          Expanded(
-            child: _PersonalAddressSegmentItem(
-              itemKey: const Key('personal_address_segment_province'),
-              title: provinceTitle,
-              isActive: activeLevel == _PersonalAddressLevel.province,
-              isEnabled:
-                  _levelRank(_PersonalAddressLevel.province) <=
-                  _levelRank(maxReachedLevel),
-              onTap: () => onLevelChanged(_PersonalAddressLevel.province),
-            ),
-          ),
-          Container(width: 1.w, color: const Color(0xFFF0F0F0)),
-          Expanded(
-            child: _PersonalAddressSegmentItem(
-              itemKey: const Key('personal_address_segment_municipality'),
-              title: municipalityTitle,
-              isActive: activeLevel == _PersonalAddressLevel.municipality,
-              isTrailing: true,
-              isEnabled:
-                  _levelRank(_PersonalAddressLevel.municipality) <=
-                  _levelRank(maxReachedLevel),
-              onTap: () => onLevelChanged(_PersonalAddressLevel.municipality),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  int _levelRank(_PersonalAddressLevel level) {
-    switch (level) {
-      case _PersonalAddressLevel.region:
-        return 0;
-      case _PersonalAddressLevel.province:
-        return 1;
-      case _PersonalAddressLevel.municipality:
-        return 2;
-    }
-  }
-}
-
-class _PersonalAddressSegmentItem extends StatelessWidget {
-  const _PersonalAddressSegmentItem({
-    this.itemKey,
-    required this.title,
-    required this.isActive,
-    required this.isEnabled,
-    required this.onTap,
-    this.isLeading = false,
-    this.isTrailing = false,
-  });
-
-  final Key? itemKey;
-  final String title;
-  final bool isActive;
-  final bool isEnabled;
-  final VoidCallback onTap;
-  final bool isLeading;
-  final bool isTrailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: isEnabled ? onTap : null,
-      child: Container(
-        key: itemKey,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.certificationUploadDialogConfirm : null,
-          borderRadius: BorderRadius.horizontal(
-            left: isLeading ? Radius.circular(18.r) : Radius.zero,
-            right: isTrailing ? Radius.circular(18.r) : Radius.zero,
-          ),
-        ),
-        child: Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            color: isActive ? Colors.white : const Color(0xFFC6C6C6),
-            fontSize: 12.sp,
-            fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
-            height: 18 / 12,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PersonalAddressColumn extends StatelessWidget {
-  const _PersonalAddressColumn({
-    required this.options,
-    required this.selectedIndex,
-    required this.onTap,
-    this.showSelectedIndicator = false,
-    this.dividerColor = AppColors.certificationDivider,
-    this.textColor = AppColors.certificationTextPrimary,
-    this.selectedFontWeight = FontWeight.w700,
-    this.itemPadding,
-  });
-
-  final List<_PersonalAddressNode> options;
-  final int selectedIndex;
-  final ValueChanged<int> onTap;
-  final bool showSelectedIndicator;
-  final Color dividerColor;
-  final Color textColor;
-  final FontWeight selectedFontWeight;
-  final EdgeInsetsGeometry? itemPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      shrinkWrap: true,
-      itemCount: options.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, color: dividerColor),
-      itemBuilder: (context, index) {
-        final option = options[index];
-        final isSelected = index == selectedIndex;
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () => onTap(index),
-          child: Padding(
-            padding:
-                itemPadding ??
-                ScreenAdapter.edgeInsetsOnly(
-                  left: 16,
-                  right: 16,
-                  top: 14,
-                  bottom: 14,
-                ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    option.label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 18.sp,
-                      fontWeight: isSelected
-                          ? selectedFontWeight
-                          : FontWeight.w400,
-                      height: 22 / 18,
-                    ),
-                  ),
-                ),
-                if (showSelectedIndicator && isSelected)
-                  const _PersonalEnumSelectedIndicator(),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PersonalAddressNode {
-  const _PersonalAddressNode({
-    required this.addressId,
-    required this.label,
-    required this.children,
-  });
-
-  final String addressId;
-  final String label;
-  final List<_PersonalAddressNode> children;
-
-  factory _PersonalAddressNode.fromJson(Json json) {
-    return _PersonalAddressNode(
-      addressId: json['isolines'].stringValue.trim(),
-      label: json['governmental'].stringValue.trim(),
-      children: json['keelboat'].listValue
-          .map((item) => _PersonalAddressNode.fromJson(Json(item)))
-          .where((item) => item.label.isNotEmpty)
-          .toList(),
-    );
-  }
-}
-
-class _PersonalAddressOption extends _PersonalAddressNode {
-  const _PersonalAddressOption({
-    required super.label,
-    required super.children,
-    required super.addressId,
-  });
-
-  static List<_PersonalAddressOption> parseList(Json json) {
-    final items = json['keelboat'].listValue;
-    return items
-        .map((item) => _PersonalAddressOption.fromJson(Json(item)))
-        .where((item) => item.label.isNotEmpty && item.children.isNotEmpty)
-        .toList();
-  }
-
-  factory _PersonalAddressOption.fromJson(Json json) {
-    final node = _PersonalAddressNode.fromJson(json);
-    return _PersonalAddressOption(
-      label: node.label,
-      children: node.children,
-      addressId: node.addressId,
-    );
-  }
-}
-
-class _PersonalAddressSelection {
-  const _PersonalAddressSelection({required this.label, required this.value});
-
-  final String label;
-  final String value;
 }
