@@ -111,13 +111,11 @@ class NetworkClient {
   Future<NetworkResponse> post(
     String path, {
     Map<String, dynamic> body = const {},
-    Map<String, dynamic> businessRandomFields = const {},
   }) async {
     final request = await _buildRequestPayload(
       path: path,
       method: RequestMethod.post,
       businessParams: body,
-      businessRandomFields: businessRandomFields,
     );
     final response = await _dio.postUri(
       _buildUri(path, request.queryParameters),
@@ -131,13 +129,11 @@ class NetworkClient {
     String path, {
     Map<String, dynamic> body = const {},
     List<UploadFilePart> files = const [],
-    Map<String, dynamic> businessRandomFields = const {},
   }) async {
     final request = await _buildRequestPayload(
       path: path,
       method: RequestMethod.upload,
       businessParams: body,
-      businessRandomFields: businessRandomFields,
     );
 
     final formData = FormData.fromMap(<String, dynamic>{...request.body});
@@ -174,7 +170,6 @@ class NetworkClient {
     required String path,
     required RequestMethod method,
     required Map<String, dynamic> businessParams,
-    Map<String, dynamic> businessRandomFields = const {},
   }) async {
     final commonParams = await _commonParamsProvider.getCommonParams();
     final queryParams = <String, dynamic>{...commonParams};
@@ -192,11 +187,7 @@ class NetworkClient {
       return _BuiltRequest(queryParameters: queryParams, body: const {});
     }
 
-    final body = <String, dynamic>{...businessParams, ...businessRandomFields};
-    if (businessRandomFields.isEmpty) {
-      body[_config.businessRandomFieldName] = RandomUtil.numeric(6);
-    }
-    return _BuiltRequest(queryParameters: queryParams, body: body);
+    return _BuiltRequest(queryParameters: queryParams, body: businessParams);
   }
 }
 

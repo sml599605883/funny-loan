@@ -17,12 +17,13 @@ import '../models/personal_info_field_data.dart';
 import '../models/personal_info_field_option.dart';
 import 'widgets/address_selection_sheet.dart';
 import 'widgets/enum_selection_sheet.dart';
+import 'widgets/salary_day_selection_sheet.dart';
 
-typedef PersonalInfoProductDetailFlowRunner =
+typedef WorkInfoProductDetailFlowRunner =
     Future<void> Function(String productId);
 
-class CertificationPersonalInfoPage extends StatefulWidget {
-  const CertificationPersonalInfoPage({
+class CertificationWorkInfoPage extends StatefulWidget {
+  const CertificationWorkInfoPage({
     super.key,
     this.apiService,
     this.productDetailFlowRunner =
@@ -30,15 +31,14 @@ class CertificationPersonalInfoPage extends StatefulWidget {
   });
 
   final ApiService? apiService;
-  final PersonalInfoProductDetailFlowRunner productDetailFlowRunner;
+  final WorkInfoProductDetailFlowRunner productDetailFlowRunner;
 
   @override
-  State<CertificationPersonalInfoPage> createState() =>
-      _CertificationPersonalInfoPageState();
+  State<CertificationWorkInfoPage> createState() =>
+      _CertificationWorkInfoPageState();
 }
 
-class _CertificationPersonalInfoPageState
-    extends State<CertificationPersonalInfoPage> {
+class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
   late final ApiService _apiService =
       widget.apiService ?? Get.find<ApiService>();
   late final CertificationPersonalInfoArgs _pageArgs =
@@ -46,9 +46,20 @@ class _CertificationPersonalInfoPageState
   List<PersonalInfoFieldData> _fields = const <PersonalInfoFieldData>[];
   List<AddressOption>? _cachedAddressOptions;
   Future<List<AddressOption>>? _addressOptionsFuture;
+  final Map<String, List<SalaryDayGroup>> _salaryDayOptionsByField =
+      <String, List<SalaryDayGroup>>{};
+  final Map<String, SalaryDaySelection> _salaryDaySelectionsByField =
+      <String, SalaryDaySelection>{};
   bool _isLoading = true;
   bool _isSubmitting = false;
   String _errorMessage = '';
+
+  String get _displayTitle {
+    if (_pageArgs.title.isNotEmpty) {
+      return _pageArgs.title;
+    }
+    return 'Work Information';
+  }
 
   @override
   void initState() {
@@ -73,10 +84,10 @@ class _CertificationPersonalInfoPageState
         bottom: false,
         child: Column(
           children: [
-            _PersonalInfoHeader(title: _pageArgs.displayTitle),
+            _WorkInfoHeader(title: _displayTitle),
             SizedBox(height: 16.h),
             const CertificationUploadHintBanner(
-              scabiosaFieldKey: 'verves',
+              scabiosaFieldKey: 'presumably',
               text:
                   'A clear ID photo is the key to lightning-fast approval. Please upload ID front.',
             ),
@@ -104,7 +115,7 @@ class _CertificationPersonalInfoPageState
           ],
         ),
       ),
-      bottomNavigationBar: _PersonalInfoSubmitButton(
+      bottomNavigationBar: _WorkInfoSubmitButton(
         isSubmitting: _isSubmitting,
         onTap: _isSubmitting ? null : _submitUserInfo,
       ),
@@ -165,10 +176,10 @@ class _CertificationPersonalInfoPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _PersonalInfoProgress(),
+        const _WorkInfoProgress(),
         SizedBox(height: 23.h),
         for (var index = 0; index < _fields.length; index++) ...[
-          _PersonalInfoField(
+          _WorkInfoField(
             field: _fields[index],
             onTap: () => _handleFieldTap(_fields[index]),
           ),
@@ -194,7 +205,7 @@ class _CertificationPersonalInfoPageState
     });
 
     try {
-      final response = await _apiService.fetchUserInfo(<String, dynamic>{
+      final response = await _apiService.fetchWorkInfo(<String, dynamic>{
         'cohabiter': productId,
       });
       final fields = _parseFields(response.raw);
@@ -224,8 +235,30 @@ class _CertificationPersonalInfoPageState
     final fields = json['rekeys']['tingling'].listValue.isNotEmpty
         ? json['rekeys']['tingling'].listValue
         : json['tingling'].listValue;
+    _salaryDayOptionsByField.clear();
+    _salaryDaySelectionsByField.clear();
     return fields
-        .map(PersonalInfoFieldData.fromJson)
+        .map((item) {
+          final field = PersonalInfoFieldData.fromJson(item);
+          if (field.saveKey == 'dines') {
+            final salaryDayOptions = SalaryDayGroup.parseList(
+              Json(item)['scabiosa'].rawValue,
+            );
+            if (salaryDayOptions.isNotEmpty) {
+              _salaryDayOptionsByField[field.saveKey] = salaryDayOptions;
+              final initialSelection = SalaryDaySelection.fromSubmitValue(
+                salaryDayOptions,
+                field.selectedValue,
+              );
+              if (initialSelection != null) {
+                _salaryDaySelectionsByField[field.saveKey] = initialSelection;
+                field.selectedValue = initialSelection.submitValue;
+                field.controller.text = initialSelection.displayText;
+              }
+            }
+          }
+          return field;
+        })
         .where((field) => field.label.isNotEmpty && field.saveKey.isNotEmpty)
         .toList();
   }
@@ -248,6 +281,10 @@ class _CertificationPersonalInfoPageState
     }
     if (field.isCitySelect) {
       await _handleAddressFieldTap(field);
+      return;
+    }
+    if (field.saveKey == 'dines') {
+      await _handleSalaryDayFieldTap(field);
       return;
     }
     await _clearActiveFocus();
@@ -278,6 +315,43 @@ class _CertificationPersonalInfoPageState
     }
     setState(() {
       field.selectOption(selectedOption);
+    });
+  }
+
+  Future<void> _handleSalaryDayFieldTap(PersonalInfoFieldData field) async {
+    await _clearActiveFocus();
+
+    final options = _salaryDayOptionsByField[field.saveKey] ?? const <SalaryDayGroup>[];
+    if (options.isEmpty) {
+      EasyLoading.showToast(
+        field.placeholder.isNotEmpty
+            ? field.placeholder
+            : 'Please select ${field.label}',
+      );
+      return;
+    }
+
+    final currentSelection = _salaryDaySelectionsByField[field.saveKey];
+    final selection = await showModalBottomSheet<SalaryDaySelection>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: AppColors.certificationUploadDialogBarrier,
+      builder: (sheetContext) {
+        return SalaryDaySelectionSheet(
+          options: options,
+          currentGroupValue: currentSelection?.groupValue ?? '',
+          currentChildValue: currentSelection?.submitValue ?? field.selectedValue,
+        );
+      },
+    );
+    if (selection == null || !mounted) {
+      return;
+    }
+    setState(() {
+      _salaryDaySelectionsByField[field.saveKey] = selection;
+      field.selectedValue = selection.submitValue;
+      field.controller.text = selection.displayText;
     });
   }
 
@@ -371,13 +445,16 @@ class _CertificationPersonalInfoPageState
 
     final body = <String, dynamic>{'cohabiter': productId};
     for (final field in _fields) {
-      body[field.saveKey] = field.currentSubmitValue;
+      body[field.saveKey] = field.saveKey == 'dines'
+          ? (_salaryDaySelectionsByField[field.saveKey]?.submitValue ??
+                field.selectedValue.trim())
+          : field.currentSubmitValue;
     }
 
     setState(() => _isSubmitting = true);
     try {
       EasyLoading.show();
-      await _apiService.saveUserInfo(body);
+      await _apiService.saveWorkInfo(body);
       await widget.productDetailFlowRunner(productId);
     } catch (error) {
       if (!mounted) {
@@ -393,8 +470,8 @@ class _CertificationPersonalInfoPageState
   }
 }
 
-class _PersonalInfoHeader extends StatelessWidget {
-  const _PersonalInfoHeader({required this.title});
+class _WorkInfoHeader extends StatelessWidget {
+  const _WorkInfoHeader({required this.title});
 
   final String title;
 
@@ -438,14 +515,14 @@ class _PersonalInfoHeader extends StatelessWidget {
   }
 }
 
-class _PersonalInfoProgress extends StatelessWidget {
-  const _PersonalInfoProgress();
+class _WorkInfoProgress extends StatelessWidget {
+  const _WorkInfoProgress();
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Image.asset(
-        'assets/certification/certification_personal_progress_step1.png',
+        'assets/certification/certification_personal_progress_step2.png',
         width: 343.w,
         fit: BoxFit.fitWidth,
       ),
@@ -453,8 +530,8 @@ class _PersonalInfoProgress extends StatelessWidget {
   }
 }
 
-class _PersonalInfoField extends StatelessWidget {
-  const _PersonalInfoField({required this.field, required this.onTap});
+class _WorkInfoField extends StatelessWidget {
+  const _WorkInfoField({required this.field, required this.onTap});
 
   final PersonalInfoFieldData field;
   final VoidCallback onTap;
@@ -476,10 +553,10 @@ class _PersonalInfoField extends StatelessWidget {
         SizedBox(height: 7.h),
         if (field.isSelectable)
           GestureDetector(
-            key: Key('certification_personal_info_${field.saveKey}_selector'),
+            key: Key('certification_work_info_${field.saveKey}_selector'),
             behavior: HitTestBehavior.opaque,
             onTap: onTap,
-            child: _PersonalInfoFieldContainer(
+            child: _WorkInfoFieldContainer(
               isAddressField: field.isCitySelect,
               child: Row(
                 children: [
@@ -515,9 +592,9 @@ class _PersonalInfoField extends StatelessWidget {
             ),
           )
         else
-          _PersonalInfoFieldContainer(
+          _WorkInfoFieldContainer(
             child: TextField(
-              key: Key('certification_personal_info_${field.saveKey}_input'),
+              key: Key('certification_work_info_${field.saveKey}_input'),
               controller: field.controller,
               keyboardType: field.isNumeric
                   ? TextInputType.number
@@ -548,8 +625,8 @@ class _PersonalInfoField extends StatelessWidget {
   }
 }
 
-class _PersonalInfoFieldContainer extends StatelessWidget {
-  const _PersonalInfoFieldContainer({
+class _WorkInfoFieldContainer extends StatelessWidget {
+  const _WorkInfoFieldContainer({
     required this.child,
     this.isAddressField = false,
   });
@@ -579,8 +656,8 @@ class _PersonalInfoFieldContainer extends StatelessWidget {
   }
 }
 
-class _PersonalInfoSubmitButton extends StatelessWidget {
-  const _PersonalInfoSubmitButton({
+class _WorkInfoSubmitButton extends StatelessWidget {
+  const _WorkInfoSubmitButton({
     required this.isSubmitting,
     required this.onTap,
   });

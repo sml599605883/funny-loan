@@ -15,6 +15,7 @@ import 'package:funny_loan/app/modules/certification_step/views/certification_pe
 import 'package:funny_loan/app/modules/certification_step/views/certification_step_page.dart';
 import 'package:funny_loan/app/modules/certification_step/views/certification_upload_page.dart';
 import 'package:funny_loan/app/modules/certification_step/views/certification_upload_success_page.dart';
+import 'package:funny_loan/app/modules/certification_step/views/certification_work_info_page.dart';
 import 'package:funny_loan/app/network/api/api_service.dart';
 import 'package:funny_loan/app/network/client/network_client.dart';
 import 'package:funny_loan/app/network/config/network_config.dart';
@@ -385,6 +386,96 @@ void main() {
       });
       expect(find.byType(CertificationPersonalInfoPage), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets(
+    'face page fetches product detail and dispatches work info next step after submit success',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          faceTokenResponseData: const <String, dynamic>{
+            'grayly': 200,
+            'unwarned': 'td-token',
+          },
+          productDetailResponseData: const <String, dynamic>{
+            'gewurztraminers': 200,
+            'reallot': '',
+            'accretes': <String, dynamic>{
+              'isolines': '123',
+              'disprovable': 'Cash Loan',
+              'rejectee': 'ORD-1',
+            },
+            'oocytes': <dynamic>[],
+            'tetragrammaton': <String, dynamic>{
+              'sidearms': 'work',
+              'hazinesses': 'Work Information',
+              'rutherfordiums': 'job',
+              'outcrop': 0,
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          facePageBuilder: () => CertificationFacePage(
+            requestCameraPermission: () async => PermissionStatus.granted,
+            showTrustDecisionLiveness: (unwarned) async =>
+                const TrustDecisionLivenessResult(
+                  success: true,
+                  code: 0,
+                  message: 'ok',
+                  image: 'SGVsbG8=',
+                  sequenceId: 'face-seq',
+                  livenessId: 'live-1',
+                  raw: <String, dynamic>{
+                    'sequenceId': 'face-seq',
+                    'image': 'SGVsbG8=',
+                    'liveness_id': 'live-1',
+                  },
+                ),
+            faceImageFilePathBuilder: (imageBase64) async => '/tmp/face.jpg',
+          ),
+        ),
+      );
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationFace,
+        arguments: <String, dynamic>{
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Face verification',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Submit'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final apiService = Get.find<ApiService>() as _FakeApiService;
+      expect(apiService.fetchedProductDetailBody, <String, dynamic>{
+        'cohabiter': '123',
+      });
+      expect(find.byType(CertificationWorkInfoPage), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((widget) {
+          if (widget is! Image) {
+            return false;
+          }
+          final imageProvider = widget.image;
+          return imageProvider is AssetImage &&
+              imageProvider.assetName ==
+                  'assets/certification/certification_personal_progress_step2.png';
+        }),
+        findsOneWidget,
+      );
     },
   );
 
@@ -971,6 +1062,63 @@ void main() {
   );
 
   testWidgets(
+    'identity upload success page does not refocus previous input after birth date sheet closes',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          successPageBuilder: () => CertificationUploadSuccessPage(
+            birthDatePicker: (context, initialDate) async => null,
+          ),
+        ),
+      );
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationUploadSuccess,
+        arguments: <String, dynamic>{
+          'identityType': 'PRC',
+          'result': <String, dynamic>{
+            'governmental': 'SIMBAJON JR ROLANDO MAESTRE',
+            'underspin': '0111-9695505-5',
+            'studiednesses': '1995/05/31',
+            'sidearms': '',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final nameField = find.byKey(
+        const Key('certification_success_full_name_input'),
+      );
+      await tester.tap(nameField);
+      await tester.pump();
+
+      final successEditable = tester.widget<EditableText>(
+        find.descendant(
+          of: nameField,
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(successEditable.focusNode.hasFocus, isTrue);
+
+      await tester.tap(
+        find.byKey(const Key('certification_success_birth_date')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(successEditable.focusNode.hasFocus, isFalse);
+    },
+  );
+
+  testWidgets(
     'identity upload success page birth date picker uses dd-MM-yyyy order',
     (WidgetTester tester) async {
       Get.put<ApiService>(
@@ -1268,6 +1416,381 @@ void main() {
     });
     expect(fetchedProductId, '123');
   });
+
+  testWidgets('work info page submits edited values', (
+    WidgetTester tester,
+  ) async {
+    final apiService = _FakeApiService(
+      expectedProductId: '123',
+      responseData: const <String, dynamic>{},
+      userInfoResponseData: const <String, dynamic>{
+        'rekeys': <String, dynamic>{
+          'tingling': <Map<String, dynamic>>[
+            <String, dynamic>{
+              'hazinesses': 'Company Name',
+              'tissual': 'Please enter',
+              'unplait': 'interrogators',
+              'dulses': 'Craniosacral',
+              'dominances': 0,
+              'scabiosa': <dynamic>[],
+              'disrelished': 'Old Company',
+            },
+            <String, dynamic>{
+              'hazinesses': 'City You Work',
+              'tissual': 'Please select city',
+              'unplait': 'picklocks',
+              'dulses': 'RestroomInefficacies',
+              'dominances': 0,
+              'scabiosa': <dynamic>[],
+              'disrelished': 'Province A-City A1-District A1A',
+            },
+            <String, dynamic>{
+              'hazinesses': 'Type of Work',
+              'tissual': 'Please select type',
+              'unplait': 'placets',
+              'dulses': 'Ataractics',
+              'dominances': 0,
+              'scabiosa': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'governmental': 'Office Worker',
+                  'outcrop': 1,
+                },
+                <String, dynamic>{'governmental': 'Driver', 'outcrop': 2},
+              ],
+              'disrelished': '1',
+            },
+          ],
+        },
+      },
+    );
+    Get.put<ApiService>(apiService, permanent: true);
+    String? fetchedProductId;
+
+    await tester.pumpWidget(
+      _buildTestApp(
+        workInfoPageBuilder: () => CertificationWorkInfoPage(
+          productDetailFlowRunner: (productId) async {
+            fetchedProductId = productId;
+          },
+        ),
+      ),
+    );
+
+    Get.toNamed<dynamic>(
+      AppRoutes.certificationWorkInfo,
+      arguments: <String, dynamic>{
+        'payload': <String, dynamic>{
+          'nextStepTitle': 'Work Information',
+          'productId': '123',
+        },
+      },
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byKey(const Key('certification_work_info_interrogators_input')),
+      'New Company',
+    );
+    await tester.tap(
+      find.byKey(const Key('certification_work_info_picklocks_selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Province B'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('City B1').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('District B1A').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('certification_work_info_placets_selector')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Driver').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Submit'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(apiService.savedWorkInfoBody, <String, dynamic>{
+      'cohabiter': '123',
+      'interrogators': 'New Company',
+      'picklocks': 'Province B-City B1-District B1A',
+      'placets': '2',
+    });
+    expect(fetchedProductId, '123');
+  });
+
+  testWidgets(
+    'personal info page does not refocus previous input after enum sheet closes',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          userInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Gender',
+                  'tissual': 'Please select gender',
+                  'unplait': 'orbs',
+                  'dulses': 'Ataractics',
+                  'dominances': 0,
+                  'scabiosa': <Map<String, dynamic>>[
+                    <String, dynamic>{'governmental': 'Female', 'outcrop': 2},
+                    <String, dynamic>{'governmental': 'Male', 'outcrop': 1},
+                  ],
+                  'disrelished': 'Female',
+                },
+                <String, dynamic>{
+                  'hazinesses': 'Home Phone Number',
+                  'tissual': 'Please enter',
+                  'unplait': 'fragging',
+                  'dulses': 'Craniosacral',
+                  'dominances': 1,
+                  'scabiosa': <dynamic>[],
+                  'disrelished': '09998887777',
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationPersonalInfo,
+        arguments: <String, dynamic>{
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Personal information',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final phoneField = find.byKey(
+        const Key('certification_personal_info_fragging_input'),
+      );
+      await tester.tap(phoneField);
+      await tester.pump();
+
+      final personalEditable = tester.widget<EditableText>(
+        find.descendant(
+          of: phoneField,
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(personalEditable.focusNode.hasFocus, isTrue);
+
+      await tester.tap(
+        find.byKey(const Key('certification_personal_info_orbs_selector')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(personalEditable.focusNode.hasFocus, isFalse);
+    },
+  );
+
+  testWidgets(
+    'work info page does not refocus previous input after enum sheet closes',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          userInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Company Name',
+                  'tissual': 'Please enter',
+                  'unplait': 'interrogators',
+                  'dulses': 'Craniosacral',
+                  'dominances': 0,
+                  'scabiosa': <dynamic>[],
+                  'disrelished': 'Old Company',
+                },
+                <String, dynamic>{
+                  'hazinesses': 'Type of Work',
+                  'tissual': 'Please select type',
+                  'unplait': 'placets',
+                  'dulses': 'Ataractics',
+                  'dominances': 0,
+                  'scabiosa': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'governmental': 'Office Worker',
+                      'outcrop': 1,
+                    },
+                    <String, dynamic>{'governmental': 'Driver', 'outcrop': 2},
+                  ],
+                  'disrelished': '1',
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationWorkInfo,
+        arguments: <String, dynamic>{
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Work Information',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final companyField = find.byKey(
+        const Key('certification_work_info_interrogators_input'),
+      );
+      await tester.tap(companyField);
+      await tester.pump();
+
+      final workEditable = tester.widget<EditableText>(
+        find.descendant(
+          of: companyField,
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(workEditable.focusNode.hasFocus, isTrue);
+
+      await tester.tap(
+        find.byKey(const Key('certification_work_info_placets_selector')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(workEditable.focusNode.hasFocus, isFalse);
+    },
+  );
+
+  testWidgets(
+    'work info salary day selector shows pipe text and submits second-level value',
+    (WidgetTester tester) async {
+      final apiService = _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        userInfoResponseData: const <String, dynamic>{
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'Company Name',
+                'tissual': 'Please enter',
+                'unplait': 'interrogators',
+                'dulses': 'Craniosacral',
+                'dominances': 0,
+                'scabiosa': <dynamic>[],
+                'disrelished': 'Old Company',
+              },
+              <String, dynamic>{
+                'hazinesses': 'Salary Day',
+                'tissual': 'Please select salary day',
+                'unplait': 'dines',
+                'dulses': 'Ataractics',
+                'dominances': 0,
+                'scabiosa': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'governmental': '1st Half',
+                    'outcrop': 'half_1',
+                    'keelboat': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': '5th',
+                        'outcrop': '5',
+                      },
+                      <String, dynamic>{
+                        'governmental': '10th',
+                        'outcrop': '10',
+                      },
+                    ],
+                  },
+                  <String, dynamic>{
+                    'governmental': '2nd Half',
+                    'outcrop': 'half_2',
+                    'keelboat': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': '20th',
+                        'outcrop': '20',
+                      },
+                      <String, dynamic>{
+                        'governmental': '25th',
+                        'outcrop': '25',
+                      },
+                    ],
+                  },
+                ],
+                'disrelished': '',
+              },
+            ],
+          },
+        },
+      );
+      Get.put<ApiService>(apiService, permanent: true);
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationWorkInfo,
+        arguments: <String, dynamic>{
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Work Information',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('certification_work_info_dines_selector')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('2nd Half'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('25th').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('2nd Half|25th'), findsOneWidget);
+
+      await tester.tap(find.text('Submit'));
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(apiService.savedWorkInfoBody, <String, dynamic>{
+        'cohabiter': '123',
+        'interrogators': 'Old Company',
+        'dines': '25',
+      });
+    },
+  );
 
   testWidgets(
     'address sheet advances step by step and commits on third-level done',
@@ -1723,6 +2246,7 @@ Widget _buildTestApp({
   Widget Function()? successPageBuilder,
   Widget Function()? facePageBuilder,
   Widget Function()? personalInfoPageBuilder,
+  Widget Function()? workInfoPageBuilder,
 }) {
   return GetMaterialApp(
     builder: (context, child) {
@@ -1757,6 +2281,10 @@ Widget _buildTestApp({
         page:
             personalInfoPageBuilder ??
             () => const CertificationPersonalInfoPage(),
+      ),
+      GetPage(
+        name: AppRoutes.certificationWorkInfo,
+        page: workInfoPageBuilder ?? () => const CertificationWorkInfoPage(),
       ),
     ],
   );
@@ -1832,6 +2360,7 @@ class _FakeApiService extends ApiService {
   Map<String, dynamic> uploadedBody = const <String, dynamic>{};
   Map<String, dynamic> savedIdentityBody = const <String, dynamic>{};
   Map<String, dynamic> savedUserInfoBody = const <String, dynamic>{};
+  Map<String, dynamic> savedWorkInfoBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedFaceTokenBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedProductDetailBody = const <String, dynamic>{};
 
@@ -1898,6 +2427,17 @@ class _FakeApiService extends ApiService {
   }
 
   @override
+  Future<NetworkResponse> fetchWorkInfo(Map<String, dynamic> params) async {
+    expect(params['cohabiter'], expectedProductId);
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(userInfoResponseData),
+      raw: userInfoResponseData,
+    );
+  }
+
+  @override
   Future<NetworkResponse> fetchAddressOptions() async {
     fetchAddressOptionsCallCount++;
     const responseData = <String, dynamic>{
@@ -1948,6 +2488,17 @@ class _FakeApiService extends ApiService {
   @override
   Future<NetworkResponse> saveUserInfo(Map<String, dynamic> body) async {
     savedUserInfoBody = body;
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(const <String, dynamic>{}),
+      raw: const <String, dynamic>{},
+    );
+  }
+
+  @override
+  Future<NetworkResponse> saveWorkInfo(Map<String, dynamic> body) async {
+    savedWorkInfoBody = body;
     return NetworkResponse(
       code: 0,
       message: 'success',

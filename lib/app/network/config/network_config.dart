@@ -13,7 +13,6 @@ class NetworkConfig {
     required this.signatureFieldName,
     required this.signaturePathFieldName,
     required this.queryRandomFieldName,
-    required this.businessRandomFieldName,
     required this.cryptoKey,
     required this.cryptoIv,
     this.codeKey = 'unplait',
@@ -34,7 +33,6 @@ class NetworkConfig {
   final String signatureFieldName;
   final String signaturePathFieldName;
   final String queryRandomFieldName;
-  final String businessRandomFieldName;
   final String cryptoKey;
   final String cryptoIv;
   final String codeKey;
@@ -67,7 +65,6 @@ class NetworkConfig {
       signatureFieldName: 'slipcase',
       signaturePathFieldName: 'noris',
       queryRandomFieldName: 'cycloid',
-      businessRandomFieldName: 'biz_nonce',
       cryptoKey: cryptoKey,
       cryptoIv: cryptoIv,
       staticCommonParams: <String, dynamic>{
@@ -101,7 +98,6 @@ class NetworkConfig {
       signatureFieldName: signatureFieldName,
       signaturePathFieldName: signaturePathFieldName,
       queryRandomFieldName: queryRandomFieldName,
-      businessRandomFieldName: businessRandomFieldName,
       cryptoKey: cryptoKey,
       cryptoIv: cryptoIv,
       codeKey: codeKey,

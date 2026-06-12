@@ -137,6 +137,8 @@ class _CertificationUploadSuccessPageState
   }
 
   Future<void> _handleBirthDateTap() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    await Future<void>.delayed(Duration.zero);
     final selectedBirthDate = await widget.birthDatePicker(
       context,
       _parseBirthDate(_birthDate) ?? DateTime.now(),

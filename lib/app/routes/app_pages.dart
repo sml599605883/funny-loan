@@ -5,6 +5,7 @@ import '../modules/certification_step/views/certification_face_page.dart';
 import '../modules/certification_step/views/certification_personal_info_page.dart';
 import '../modules/certification_step/views/certification_upload_page.dart';
 import '../modules/certification_step/views/certification_upload_success_page.dart';
+import '../modules/certification_step/views/certification_work_info_page.dart';
 import '../modules/detail/views/detail_page.dart';
 import '../modules/login/controllers/login_controller.dart';
 import '../modules/login/views/login_page.dart';
@@ -68,6 +69,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.certificationPersonalInfo,
       page: () => const CertificationPersonalInfoPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationWorkInfo,
+      page: () => const CertificationWorkInfoPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

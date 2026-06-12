@@ -81,6 +81,15 @@ class NavigationHelper {
     );
   }
 
+  static Future<T?>? toCertificationWorkInfo<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationWorkInfo,
+      arguments: _normalizeCertificationPayloadArguments(arguments),
+    );
+  }
+
   static Future<T?>? toAppPage<T extends Object?>(
     String rawPage, {
     Object? arguments,
@@ -115,6 +124,12 @@ class NavigationHelper {
             ) ==
             'personal') {
           return toCertificationPersonalInfo<T>(arguments: arguments);
+        }
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
+            'job') {
+          return toCertificationWorkInfo<T>(arguments: arguments);
         }
         if (NavigationTargetMapper.isCertificationStepRouteKey(rawPage)) {
           return toCertificationStep<T>(
