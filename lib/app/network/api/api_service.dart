@@ -27,9 +27,7 @@ class ApiService {
   }
 
   /// 用户账号-获取登录/注册短信验证码 POST /consultancy/grieving
-  Future<NetworkResponse> requestLoginSmsCode(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> requestLoginSmsCode(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/grieving',
       body: _withObfuscatedFields(body, const ['proscenium']),
@@ -37,9 +35,7 @@ class ApiService {
   }
 
   /// 用户账号-验证码登录/注册 POST /consultancy/proscenium
-  Future<NetworkResponse> loginOrRegisterWithCode(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> loginOrRegisterWithCode(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/proscenium',
       body: _withObfuscatedFields(body, const ['elmiest', 'stowages']),
@@ -74,9 +70,7 @@ class ApiService {
   }
 
   /// App相关-个人中心 GET /consultancy/puristic
-  Future<NetworkResponse> fetchProfileCenter(
-    Map<String, dynamic> params,
-  ) {
+  Future<NetworkResponse> fetchProfileCenter(Map<String, dynamic> params) {
     return _client.get(
       '/consultancy/puristic',
       query: _withObfuscatedFields(params, const ['outspend']),
@@ -105,9 +99,7 @@ class ApiService {
   }
 
   /// App相关-上传banner点击记录 POST /consultancy/indigotin
-  Future<NetworkResponse> uploadBannerClickRecord(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> uploadBannerClickRecord(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/indigotin',
       body: _withObfuscatedFields(body, const ['disdaining']),
@@ -115,9 +107,7 @@ class ApiService {
   }
 
   /// App相关-根据标识符查询IOS设备信息 POST /consultancy/blumed
-  Future<NetworkResponse> queryIosDeviceInfo(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> queryIosDeviceInfo(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/blumed',
       body: _withObfuscatedFields(body, const ['disdaining']),
@@ -133,9 +123,7 @@ class ApiService {
   }
 
   /// 产品相关-产品详情 POST /consultancy/sneesh
-  Future<NetworkResponse> fetchProductDetail(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> fetchProductDetail(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/sneesh',
       body: _withObfuscatedFields(body, const ['pyrene', 'etiology', 'lutes']),
@@ -143,9 +131,7 @@ class ApiService {
   }
 
   /// 认证项-获取用户身份信息 GET /consultancy/plenist
-  Future<NetworkResponse> fetchIdentityInfo(
-    Map<String, dynamic> params,
-  ) {
+  Future<NetworkResponse> fetchIdentityInfo(Map<String, dynamic> params) {
     return _client.get(
       '/consultancy/plenist',
       query: _withObfuscatedFields(params, const ['certiorari']),
@@ -220,9 +206,7 @@ class ApiService {
   }
 
   /// 认证项-获取联系人信息（第四项） GET /consultancy/sidearms
-  Future<NetworkResponse> fetchContactInfo(
-    Map<String, dynamic> params,
-  ) {
+  Future<NetworkResponse> fetchContactInfo(Map<String, dynamic> params) {
     return _client.get(
       '/consultancy/sidearms',
       query: _withObfuscatedFields(params, const ['fascias']),
@@ -238,9 +222,7 @@ class ApiService {
   }
 
   /// 认证项-获取绑卡信息（第五项） GET /consultancy/disprovable
-  Future<NetworkResponse> fetchBindCardInfo(
-    Map<String, dynamic> params,
-  ) {
+  Future<NetworkResponse> fetchBindCardInfo(Map<String, dynamic> params) {
     return _client.get(
       '/consultancy/disprovable',
       query: _withObfuscatedFields(params, const ['zigzaggy', 'tocher']),
@@ -272,9 +254,7 @@ class ApiService {
   }
 
   /// 认证项-用户账户列表 POST /consultancy/decrial
-  Future<NetworkResponse> fetchUserAccountList(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> fetchUserAccountList(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/decrial',
       body: _withObfuscatedFields(body, const ['rephotograph', 'preslaughter']),
@@ -290,9 +270,7 @@ class ApiService {
   }
 
   /// 认证项-获取挽留弹窗 POST /consultancy/cryptococci
-  Future<NetworkResponse> fetchRetentionPopup(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> fetchRetentionPopup(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/cryptococci',
       body: _withObfuscatedFields(body, const ['avidly']),
@@ -305,9 +283,7 @@ class ApiService {
   }
 
   /// 用户&订单相关-跟进订单号获取跳转地址 POST /consultancy/recitalists
-  Future<NetworkResponse> fetchOrderRedirect(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> fetchOrderRedirect(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/recitalists',
       body: _withObfuscatedFields(body, const [
@@ -333,9 +309,7 @@ class ApiService {
   }
 
   /// 数据上报-google_market上报 POST /consultancy/landforms
-  Future<NetworkResponse> reportGoogleMarket(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> reportGoogleMarket(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/landforms',
       body: _withObfuscatedFields(body, const ['unroasted']),
@@ -368,9 +342,7 @@ class ApiService {
   }
 
   /// 数据上报-通讯录加密上报 POST /consultancy/topworks
-  Future<NetworkResponse> reportEncryptedContacts(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> reportEncryptedContacts(Map<String, dynamic> body) {
     return _client.post(
       '/consultancy/topworks',
       body: _withObfuscatedFields(body, const ['sanger', 'parqueting']),
@@ -378,9 +350,7 @@ class ApiService {
   }
 
   /// 数据上报-上报Apple推送token POST /consultancy/hazinesses
-  Future<NetworkResponse> reportApplePushToken(
-    Map<String, dynamic> body,
-  ) {
+  Future<NetworkResponse> reportApplePushToken(Map<String, dynamic> body) {
     return _client.post('/consultancy/hazinesses', body: body);
   }
 }

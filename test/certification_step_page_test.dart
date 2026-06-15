@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:funny_loan/app/core/json/json.dart';
 import 'package:funny_loan/app/core/native/native_bridge.dart';
 import 'package:funny_loan/app/core/storage/app_data_store.dart';
+import 'package:funny_loan/app/modules/certification_step/views/certification_bind_card_page.dart';
 import 'package:funny_loan/app/modules/certification_step/views/certification_face_page.dart';
 import 'package:funny_loan/app/modules/certification_step/views/certification_personal_info_page.dart';
 import 'package:funny_loan/app/modules/certification_step/views/certification_step_page.dart';
@@ -1102,10 +1103,7 @@ void main() {
       await tester.pump();
 
       final successEditable = tester.widget<EditableText>(
-        find.descendant(
-          of: nameField,
-          matching: find.byType(EditableText),
-        ),
+        find.descendant(of: nameField, matching: find.byType(EditableText)),
       );
       expect(successEditable.focusNode.hasFocus, isTrue);
 
@@ -1589,10 +1587,7 @@ void main() {
       await tester.pump();
 
       final personalEditable = tester.widget<EditableText>(
-        find.descendant(
-          of: phoneField,
-          matching: find.byType(EditableText),
-        ),
+        find.descendant(of: phoneField, matching: find.byType(EditableText)),
       );
       expect(personalEditable.focusNode.hasFocus, isTrue);
 
@@ -1669,10 +1664,7 @@ void main() {
       await tester.pump();
 
       final workEditable = tester.widget<EditableText>(
-        find.descendant(
-          of: companyField,
-          matching: find.byType(EditableText),
-        ),
+        find.descendant(of: companyField, matching: find.byType(EditableText)),
       );
       expect(workEditable.focusNode.hasFocus, isTrue);
 
@@ -1716,10 +1708,7 @@ void main() {
                     'governmental': '1st Half',
                     'outcrop': 'half_1',
                     'keelboat': <Map<String, dynamic>>[
-                      <String, dynamic>{
-                        'governmental': '5th',
-                        'outcrop': '5',
-                      },
+                      <String, dynamic>{'governmental': '5th', 'outcrop': '5'},
                       <String, dynamic>{
                         'governmental': '10th',
                         'outcrop': '10',
@@ -2204,6 +2193,819 @@ void main() {
     );
   });
 
+  testWidgets('bind card page renders fetched bank options', (
+    WidgetTester tester,
+  ) async {
+    Get.put<ApiService>(
+      _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        bindCardInfoResponseData: const <String, dynamic>{
+          'unchains':
+              'Please select the most convenient way for you to withdraw.',
+          'omitted':
+              'Double-check your account details—once submitted, funds will go here!',
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'E-wallet',
+                'outcrop': 1,
+                'tingling': <Map<String, dynamic>>[],
+              },
+              <String, dynamic>{
+                'hazinesses': 'Bank',
+                'outcrop': 2,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient bank',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient bank',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'Banco de Oro',
+                        'outcrop': 'BDO',
+                      },
+                      <String, dynamic>{
+                        'governmental': 'Union Bank',
+                        'outcrop': 'UBP',
+                      },
+                    ],
+                    'disrelished': 'UBP',
+                    'triadisms': 'Union Bank',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'First Name',
+                    'unplait': 'firstName',
+                    'tissual': 'First Name',
+                    'dulses': 'txt',
+                    'disrelished': 'John',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Middle Name',
+                    'unplait': 'middleName',
+                    'tissual': 'Middle Name',
+                    'dulses': 'txt',
+                    'centupling': 1,
+                    'disrelished': '',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Last Name',
+                    'unplait': 'lastName',
+                    'tissual': 'Last Name',
+                    'dulses': 'txt',
+                    'disrelished': 'Doe',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Bank Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your bank account',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Repeat Bank Account',
+                    'unplait': 'confirmCardNo',
+                    'tissual': 'Ensure the account number is correct',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ),
+      permanent: true,
+    );
+
+    await tester.pumpWidget(_buildTestApp());
+
+    Get.toNamed<dynamic>(
+      AppRoutes.certificationBindCard,
+      arguments: <String, dynamic>{
+        'routeKey': 'bank',
+        'payload': <String, dynamic>{
+          'nextStepTitle': 'Informasi bank',
+          'productId': '123',
+        },
+      },
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Informasi bank'), findsOneWidget);
+    expect(
+      find.byKey(const Key('certification_bind_card_channelCode_selector')),
+      findsOneWidget,
+    );
+    expect(find.text('Union Bank'), findsOneWidget);
+    expect(find.text('Bank Account'), findsOneWidget);
+    expect(find.text('Repeat Bank Account'), findsOneWidget);
+    expect(
+      find.byKey(const Key('certification_bind_card_progress')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('certification_bind_card_firstName_input')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'bind card page submits selected bank account info and refreshes product detail',
+    (WidgetTester tester) async {
+      final apiService = _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        bindCardInfoResponseData: const <String, dynamic>{
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'Bank',
+                'outcrop': 2,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient bank',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient bank',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'Banco de Oro',
+                        'outcrop': 'BDO',
+                      },
+                      <String, dynamic>{
+                        'governmental': 'Union Bank',
+                        'outcrop': 'UBP',
+                      },
+                    ],
+                    'disrelished': 'UBP',
+                    'triadisms': 'Union Bank',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'First Name',
+                    'unplait': 'firstName',
+                    'tissual': 'First Name',
+                    'dulses': 'txt',
+                    'disrelished': 'John',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Middle Name',
+                    'unplait': 'middleName',
+                    'tissual': 'Middle Name',
+                    'dulses': 'txt',
+                    'centupling': 1,
+                    'disrelished': '',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Last Name',
+                    'unplait': 'lastName',
+                    'tissual': 'Last Name',
+                    'dulses': 'txt',
+                    'disrelished': 'Doe',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Bank Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your bank account',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Repeat Bank Account',
+                    'unplait': 'confirmCardNo',
+                    'tissual': 'Ensure the account number is correct',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      );
+      Get.put<ApiService>(apiService, permanent: true);
+      String? fetchedProductId;
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          bindCardPageBuilder: () => CertificationBindCardPage(
+            productDetailFlowRunner: (productId) async {
+              fetchedProductId = productId;
+            },
+          ),
+        ),
+      );
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('certification_bind_card_cardNo_input')),
+        '1234567890',
+      );
+      await tester.enterText(
+        find.byKey(const Key('certification_bind_card_confirmCardNo_input')),
+        '1234567890',
+      );
+      await tester.tap(find.text('Submit'));
+      await tester.pumpAndSettle();
+
+      expect(apiService.submittedBindCardBody, <String, dynamic>{
+        'cohabiter': '123',
+        'impotencies': 2,
+        'pinder': 'UBP',
+        'gowans': 'John',
+        'sunk': '',
+        'bookstores': 'Doe',
+        'hoppings': '1234567890',
+        'copromoter': '1234567890',
+      });
+      expect(fetchedProductId, '123');
+    },
+  );
+
+  testWidgets(
+    'bind card page text input displays disrelished instead of triadisms',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          bindCardInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Bank',
+                  'outcrop': 2,
+                  'tingling': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'hazinesses': 'First Name',
+                      'unplait': 'firstName',
+                      'tissual': 'First Name',
+                      'dulses': 'txt',
+                      'disrelished': 'Shown Name',
+                      'triadisms': 'Suggested Name',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Shown Name'), findsOneWidget);
+      expect(find.text('Suggested Name'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'bind card page suggestion bubble close keeps it hidden until field changes away from empty and back',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          bindCardInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Bank',
+                  'outcrop': 2,
+                  'tingling': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'hazinesses': 'First Name',
+                      'unplait': 'firstName',
+                      'tissual': 'First Name',
+                      'dulses': 'txt',
+                      'disrelished': '',
+                      'triadisms': 'John',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final firstNameFinder = find.byKey(
+        const Key('certification_bind_card_firstName_input'),
+      );
+      final bubbleFinder = find.byKey(
+        const Key('certification_bind_card_suggestion_bubble'),
+      );
+
+      await tester.tap(firstNameFinder);
+      await tester.pumpAndSettle();
+      expect(bubbleFinder, findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const Key('certification_bind_card_suggestion_bubble_close')),
+      );
+      await tester.pumpAndSettle();
+      expect(bubbleFinder, findsNothing);
+
+      await tester.enterText(firstNameFinder, 'A');
+      await tester.pumpAndSettle();
+      expect(bubbleFinder, findsNothing);
+
+      await tester.enterText(firstNameFinder, '');
+      await tester.pumpAndSettle();
+      expect(bubbleFinder, findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'bind card page suggestion bubble shows on focused empty text field and fills eligible empty fields',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          bindCardInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Bank',
+                  'outcrop': 2,
+                  'tingling': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'hazinesses': 'First Name',
+                      'unplait': 'firstName',
+                      'tissual': 'First Name',
+                      'dulses': 'txt',
+                      'disrelished': '',
+                      'triadisms': 'John',
+                    },
+                    <String, dynamic>{
+                      'hazinesses': 'Middle Name',
+                      'unplait': 'middleName',
+                      'tissual': 'Middle Name',
+                      'dulses': 'txt',
+                      'disrelished': '',
+                      'triadisms': 'Michael',
+                    },
+                    <String, dynamic>{
+                      'hazinesses': 'Last Name',
+                      'unplait': 'lastName',
+                      'tissual': 'Last Name',
+                      'dulses': 'txt',
+                      'disrelished': 'Doe',
+                      'triadisms': 'Smith',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final firstNameFinder = find.byKey(
+        const Key('certification_bind_card_firstName_input'),
+      );
+      final middleNameFinder = find.byKey(
+        const Key('certification_bind_card_middleName_input'),
+      );
+      final lastNameFinder = find.byKey(
+        const Key('certification_bind_card_lastName_input'),
+      );
+
+      await tester.tap(firstNameFinder);
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('certification_bind_card_suggestion_bubble')),
+        findsOneWidget,
+      );
+      expect(find.text('John'), findsOneWidget);
+      expect(
+        tester
+            .getSize(
+              find.byKey(
+                const Key('certification_bind_card_suggestion_bubble'),
+              ),
+            )
+            .width,
+        lessThan(tester.getSize(firstNameFinder).width),
+      );
+
+      await tester.tap(
+        find.byKey(const Key('certification_bind_card_suggestion_bubble')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(TextField), findsNWidgets(3));
+      expect(
+        tester.widget<TextField>(firstNameFinder).controller?.text,
+        'John',
+      );
+      expect(
+        tester.widget<TextField>(middleNameFinder).controller?.text,
+        'Michael',
+      );
+      expect(tester.widget<TextField>(lastNameFinder).controller?.text, 'Doe');
+      expect(
+        find.byKey(const Key('certification_bind_card_suggestion_bubble')),
+        findsNothing,
+      );
+    },
+  );
+
+  testWidgets('bind card page switches field group when tapping method tabs', (
+    WidgetTester tester,
+  ) async {
+    Get.put<ApiService>(
+      _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        bindCardInfoResponseData: const <String, dynamic>{
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'E-wallet',
+                'outcrop': 1,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient E-wallet',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient E-wallet',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'GCash e-wallet',
+                        'outcrop': 'GCASH',
+                      },
+                    ],
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'E-wallet Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your E-Wallet account',
+                    'dulses': 'txt',
+                  },
+                ],
+              },
+              <String, dynamic>{
+                'hazinesses': 'Bank',
+                'outcrop': 2,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient bank',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient bank',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'Union Bank',
+                        'outcrop': 'UBP',
+                      },
+                    ],
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Bank Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your bank account',
+                    'dulses': 'txt',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ),
+      permanent: true,
+    );
+
+    await tester.pumpWidget(_buildTestApp());
+
+    Get.toNamed<dynamic>(
+      AppRoutes.certificationBindCard,
+      arguments: <String, dynamic>{
+        'routeKey': 'bank',
+        'payload': <String, dynamic>{
+          'nextStepTitle': 'Informasi bank',
+          'productId': '123',
+        },
+      },
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('E-wallet Account'), findsOneWidget);
+    expect(find.text('Bank Account'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('certification_bind_card_tab_2')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bank Account'), findsOneWidget);
+    expect(find.text('E-wallet Account'), findsNothing);
+    expect(
+      find.byKey(const Key('certification_bind_card_channelCode_selector')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'bind card page does not refocus previous input after enum sheet closes',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          bindCardInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Bank',
+                  'outcrop': 2,
+                  'tingling': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'hazinesses': 'Select your recipient bank',
+                      'unplait': 'channelCode',
+                      'tissual': 'Please select your recipient bank',
+                      'dulses': 'enum',
+                      'scabiosa': <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          'governmental': 'Union Bank',
+                          'outcrop': 'UBP',
+                        },
+                      ],
+                    },
+                    <String, dynamic>{
+                      'hazinesses': 'First Name',
+                      'unplait': 'firstName',
+                      'tissual': 'First Name',
+                      'dulses': 'txt',
+                      'disrelished': '',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      final firstNameField = find.byKey(
+        const Key('certification_bind_card_firstName_input'),
+      );
+      await tester.tap(firstNameField);
+      await tester.pump();
+
+      final editable = tester.widget<EditableText>(
+        find.descendant(of: firstNameField, matching: find.byType(EditableText)),
+      );
+      expect(editable.focusNode.hasFocus, isTrue);
+
+      await tester.tap(
+        find.byKey(const Key('certification_bind_card_channelCode_selector')),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(editable.focusNode.hasFocus, isFalse);
+    },
+  );
+
+  testWidgets('bind card page selects first returned group by default', (
+    WidgetTester tester,
+  ) async {
+    Get.put<ApiService>(
+      _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        bindCardInfoResponseData: const <String, dynamic>{
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'E-wallet',
+                'outcrop': 1,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient E-wallet',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient E-wallet',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'GCash e-wallet',
+                        'outcrop': 'GCASH',
+                      },
+                    ],
+                    'triadisms': 'GCash e-wallet',
+                    'disrelished': 'GCASH',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'E-wallet Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your E-Wallet account',
+                    'dulses': 'txt',
+                  },
+                ],
+              },
+              <String, dynamic>{
+                'hazinesses': 'Bank',
+                'outcrop': 2,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient bank',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient bank',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'Union Bank',
+                        'outcrop': 'UBP',
+                      },
+                    ],
+                    'triadisms': 'Union Bank',
+                    'disrelished': 'UBP',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Bank Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your bank account',
+                    'dulses': 'txt',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      ),
+      permanent: true,
+    );
+
+    await tester.pumpWidget(_buildTestApp());
+
+    Get.toNamed<dynamic>(
+      AppRoutes.certificationBindCard,
+      arguments: <String, dynamic>{
+        'routeKey': 'bank',
+        'payload': <String, dynamic>{
+          'nextStepTitle': 'Informasi bank',
+          'productId': '123',
+        },
+      },
+    );
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('GCash e-wallet'), findsOneWidget);
+    expect(find.text('E-wallet Account'), findsOneWidget);
+    expect(find.text('Bank Account'), findsNothing);
+  });
+
+  testWidgets(
+    'bind card page treats obfuscated enum and txt types like personal info',
+    (WidgetTester tester) async {
+      Get.put<ApiService>(
+        _FakeApiService(
+          expectedProductId: '123',
+          responseData: const <String, dynamic>{},
+          bindCardInfoResponseData: const <String, dynamic>{
+            'rekeys': <String, dynamic>{
+              'tingling': <Map<String, dynamic>>[
+                <String, dynamic>{
+                  'hazinesses': 'Bank',
+                  'outcrop': 2,
+                  'tingling': <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      'hazinesses': 'Select your recipient bank',
+                      'unplait': 'channelCode',
+                      'tissual': 'Please select your recipient bank',
+                      'dulses': 'Ataractics',
+                      'scabiosa': <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          'governmental': 'Union Bank',
+                          'outcrop': 'UBP',
+                        },
+                      ],
+                    },
+                    <String, dynamic>{
+                      'hazinesses': 'Bank Account',
+                      'unplait': 'cardNo',
+                      'tissual': 'Please entry your bank account',
+                      'dulses': 'Craniosacral',
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ),
+        permanent: true,
+      );
+
+      await tester.pumpWidget(_buildTestApp());
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('certification_bind_card_channelCode_selector')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('certification_bind_card_channelCode_input')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('certification_bind_card_cardNo_input')),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets(
     'identity verification page shows network exception message only',
     (WidgetTester tester) async {
@@ -2247,6 +3049,7 @@ Widget _buildTestApp({
   Widget Function()? facePageBuilder,
   Widget Function()? personalInfoPageBuilder,
   Widget Function()? workInfoPageBuilder,
+  Widget Function()? bindCardPageBuilder,
 }) {
   return GetMaterialApp(
     builder: (context, child) {
@@ -2286,6 +3089,10 @@ Widget _buildTestApp({
         name: AppRoutes.certificationWorkInfo,
         page: workInfoPageBuilder ?? () => const CertificationWorkInfoPage(),
       ),
+      GetPage(
+        name: AppRoutes.certificationBindCard,
+        page: bindCardPageBuilder ?? () => const CertificationBindCardPage(),
+      ),
     ],
   );
 }
@@ -2320,6 +3127,7 @@ class _FakeApiService extends ApiService {
     this.faceTokenResponseData = const <String, dynamic>{},
     this.productDetailResponseData = const <String, dynamic>{},
     this.userInfoResponseData = const <String, dynamic>{},
+    this.bindCardInfoResponseData = const <String, dynamic>{},
     this.fetchError,
   }) : _responseData = responseData,
        super(
@@ -2353,6 +3161,7 @@ class _FakeApiService extends ApiService {
   final Map<String, dynamic> faceTokenResponseData;
   final Map<String, dynamic> productDetailResponseData;
   final Map<String, dynamic> userInfoResponseData;
+  final Map<String, dynamic> bindCardInfoResponseData;
   final String expectedProductId;
   final Object? fetchError;
   int fetchAddressOptionsCallCount = 0;
@@ -2361,6 +3170,8 @@ class _FakeApiService extends ApiService {
   Map<String, dynamic> savedIdentityBody = const <String, dynamic>{};
   Map<String, dynamic> savedUserInfoBody = const <String, dynamic>{};
   Map<String, dynamic> savedWorkInfoBody = const <String, dynamic>{};
+  Map<String, dynamic> fetchedBindCardInfoParams = const <String, dynamic>{};
+  Map<String, dynamic> submittedBindCardBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedFaceTokenBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedProductDetailBody = const <String, dynamic>{};
 
@@ -2438,6 +3249,17 @@ class _FakeApiService extends ApiService {
   }
 
   @override
+  Future<NetworkResponse> fetchBindCardInfo(Map<String, dynamic> params) async {
+    fetchedBindCardInfoParams = Map<String, dynamic>.from(params);
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(bindCardInfoResponseData),
+      raw: bindCardInfoResponseData,
+    );
+  }
+
+  @override
   Future<NetworkResponse> fetchAddressOptions() async {
     fetchAddressOptionsCallCount++;
     const responseData = <String, dynamic>{
@@ -2499,6 +3321,20 @@ class _FakeApiService extends ApiService {
   @override
   Future<NetworkResponse> saveWorkInfo(Map<String, dynamic> body) async {
     savedWorkInfoBody = body;
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(const <String, dynamic>{}),
+      raw: const <String, dynamic>{},
+    );
+  }
+
+  @override
+  Future<NetworkResponse> submitBindCard({
+    required Map<String, dynamic> body,
+    String? filePath,
+  }) async {
+    submittedBindCardBody = Map<String, dynamic>.from(body);
     return NetworkResponse(
       code: 0,
       message: 'success',

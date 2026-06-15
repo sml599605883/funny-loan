@@ -288,6 +288,9 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
       return;
     }
     await _clearActiveFocus();
+    if (!mounted) {
+      return;
+    }
 
     if (field.options.isEmpty) {
       EasyLoading.showToast(
@@ -320,6 +323,9 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
 
   Future<void> _handleSalaryDayFieldTap(PersonalInfoFieldData field) async {
     await _clearActiveFocus();
+    if (!mounted) {
+      return;
+    }
 
     final options = _salaryDayOptionsByField[field.saveKey] ?? const <SalaryDayGroup>[];
     if (options.isEmpty) {

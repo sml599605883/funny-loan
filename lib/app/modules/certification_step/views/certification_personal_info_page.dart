@@ -251,6 +251,9 @@ class _CertificationPersonalInfoPageState
       return;
     }
     await _clearActiveFocus();
+    if (!mounted) {
+      return;
+    }
 
     if (field.options.isEmpty) {
       EasyLoading.showToast(

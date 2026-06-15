@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
 
 import '../modules/certification_step/views/certification_step_page.dart';
+import '../modules/certification_step/views/certification_bind_card_page.dart';
 import '../modules/certification_step/views/certification_face_page.dart';
+import '../modules/certification_step/views/certification_contact_info_page.dart';
 import '../modules/certification_step/views/certification_personal_info_page.dart';
 import '../modules/certification_step/views/certification_upload_page.dart';
 import '../modules/certification_step/views/certification_upload_success_page.dart';
@@ -75,6 +77,18 @@ class AppPages {
     GetPage(
       name: AppRoutes.certificationWorkInfo,
       page: () => const CertificationWorkInfoPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationContactInfo,
+      page: () => const CertificationContactInfoPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.certificationBindCard,
+      page: () => const CertificationBindCardPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

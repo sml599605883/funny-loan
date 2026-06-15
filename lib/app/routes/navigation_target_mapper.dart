@@ -163,7 +163,6 @@ class NavigationTargetMapper {
       case 'personal':
       case 'job':
       case 'ext':
-      case 'bank':
         return true;
       default:
         return false;

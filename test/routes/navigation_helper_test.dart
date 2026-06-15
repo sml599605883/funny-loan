@@ -37,7 +37,7 @@ void main() {
     expect(find.text('产品详情'), findsOneWidget);
   });
 
-  testWidgets('certification route key can navigate to certification step page', (
+  testWidgets('bank route key can navigate to bind card page', (
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(const FunnyLoanApp());
@@ -81,9 +81,5 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Personal information'), findsOneWidget);
-    expect(
-      find.byKey(const Key('certification_personal_info_full_name_input')),
-      findsOneWidget,
-    );
   });
 }

@@ -5,11 +5,15 @@ class PersonalInfoFieldOption {
     required this.label,
     required this.value,
     this.logoUrl = '',
+    this.isUnderMaintenance = false,
+    this.maintenanceText = '',
   });
 
   final String label;
   final String value;
   final String logoUrl;
+  final bool isUnderMaintenance;
+  final String maintenanceText;
 
   static List<PersonalInfoFieldOption> parseList(Json json) {
     final result = <PersonalInfoFieldOption>[];
@@ -85,6 +89,8 @@ class PersonalInfoFieldOption {
       label: label,
       value: value,
       logoUrl: json['euchromatic'].stringValue.trim(),
+      isUnderMaintenance: json['fleshed'].intValue == 1,
+      maintenanceText: json['cantilenas'].stringValue.trim(),
     );
   }
 
@@ -92,6 +98,8 @@ class PersonalInfoFieldOption {
     required String label,
     required String value,
     String logoUrl = '',
+    bool isUnderMaintenance = false,
+    String maintenanceText = '',
   }) {
     final normalizedLabel = label.trim();
     final normalizedValue = value.trim();
@@ -102,6 +110,8 @@ class PersonalInfoFieldOption {
       label: normalizedLabel.isNotEmpty ? normalizedLabel : normalizedValue,
       value: normalizedValue.isNotEmpty ? normalizedValue : normalizedLabel,
       logoUrl: logoUrl.trim(),
+      isUnderMaintenance: isUnderMaintenance,
+      maintenanceText: maintenanceText.trim(),
     );
   }
 }

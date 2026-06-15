@@ -137,6 +137,7 @@ class _EnumOptionRow extends StatelessWidget {
   final PersonalInfoFieldOption option;
   final bool isSelected;
   final VoidCallback onTap;
+  static const _maintenanceTextColor = Color.fromRGBO(255, 163, 0, 1);
 
   @override
   Widget build(BuildContext context) {
@@ -162,16 +163,34 @@ class _EnumOptionRow extends StatelessWidget {
               SizedBox(width: 15.w),
             ],
             Expanded(
-              child: Text(
-                option.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.certificationUploadDialogText,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 22 / 18,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    option.label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: AppColors.certificationUploadDialogText,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w400,
+                      height: 22 / 18,
+                    ),
+                  ),
+                  if (option.isUnderMaintenance &&
+                      option.maintenanceText.isNotEmpty)
+                    Text(
+                      option.maintenanceText,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: _maintenanceTextColor,
+                        fontSize: 10.sp,
+                        fontWeight: FontWeight.w400,
+                        height: 20 / 10,
+                      ),
+                    ),
+                ],
               ),
             ),
             if (isSelected) const _SheetSelectedIndicator(),

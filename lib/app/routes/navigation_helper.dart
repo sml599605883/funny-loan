@@ -90,6 +90,28 @@ class NavigationHelper {
     );
   }
 
+  static Future<T?>? toCertificationContactInfo<T extends Object?>({
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationContactInfo,
+      arguments: _normalizeCertificationPayloadArguments(arguments),
+    );
+  }
+
+  static Future<T?>? toCertificationBindCard<T extends Object?>({
+    required String routeKey,
+    Object? arguments,
+  }) {
+    return Get.toNamed<T>(
+      AppRoutes.certificationBindCard,
+      arguments: <String, dynamic>{
+        'routeKey': routeKey,
+        ..._normalizeCertificationPayloadArguments(arguments),
+      },
+    );
+  }
+
   static Future<T?>? toAppPage<T extends Object?>(
     String rawPage, {
     Object? arguments,
@@ -114,6 +136,17 @@ class NavigationHelper {
         if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
               rawPage,
             ) ==
+            'bank') {
+          return toCertificationBindCard<T>(
+            routeKey: NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ),
+            arguments: arguments,
+          );
+        }
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
             'face') {
           return toCertificationFace<T>(
             arguments: _normalizeCertificationPayloadArguments(arguments),
@@ -130,6 +163,18 @@ class NavigationHelper {
             ) ==
             'job') {
           return toCertificationWorkInfo<T>(arguments: arguments);
+        }
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
+            'ext') {
+          return toCertificationContactInfo<T>(arguments: arguments);
+        }
+        if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
+              rawPage,
+            ) ==
+            'emergent') {
+          return toCertificationContactInfo<T>(arguments: arguments);
         }
         if (NavigationTargetMapper.isCertificationStepRouteKey(rawPage)) {
           return toCertificationStep<T>(

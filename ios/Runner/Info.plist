@@ -35,6 +35,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We use your camera so you can capture required identity and application documents.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>We use your contacts so you can select emergency contact information for verification.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to support risk control, compliance checks, and service security.</string>
 	<key>NSUserTrackingUsageDescription</key>
