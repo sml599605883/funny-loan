@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -7,6 +9,7 @@ import '../core/permissions/app_permission_service.dart';
 import '../core/storage/app_data_store.dart';
 import '../network/api/api_service.dart';
 import '../network/config/network_config.dart';
+import '../report/report_manager.dart';
 import 'navigation_helper.dart';
 import 'navigation_target_mapper.dart';
 
@@ -37,6 +40,8 @@ class ApiNavigationHelper {
       await NavigationHelper.toLogin();
       return;
     }
+
+    await _reportLocationAfterLoginCheck();
 
     final locationFlowResult = await _ensureLocationReady(
       locationServiceEnabledProvider: _locationServiceEnabledProvider,
@@ -164,6 +169,12 @@ class ApiNavigationHelper {
       if (orderNo.isEmpty) {
         return;
       }
+      _reportRiskScene(
+        sceneType: ReportRiskScene.orderConfirm,
+        productId: (productDetail['productId'] as String? ?? '').trim(),
+        orderNo: orderNo,
+        startTime: _currentSecondsTimestamp(),
+      );
       final redirect = await _fetchOrderRedirectByOrderNo(productDetail);
       final rawTarget = Json(redirect['rekeys'])['sidearms'].stringValue.trim();
       if (rawTarget.isNotEmpty) {
@@ -297,6 +308,40 @@ class ApiNavigationHelper {
   static String _tokenProvider() {
     return AppDataStore.getPersistentString(AppDataStore.persistedTokenKey) ??
         '';
+  }
+
+  static Future<void> _reportLocationAfterLoginCheck() async {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    try {
+      await Get.find<ReportManager>().reportLocationFromNative();
+    } catch (_) {
+      return;
+    }
+  }
+
+  static void _reportRiskScene({
+    required String sceneType,
+    required String productId,
+    required String orderNo,
+    required String startTime,
+  }) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: productId,
+        orderNo: orderNo,
+        startTime: startTime,
+      ),
+    );
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
   static Future<bool> _locationServiceEnabledProvider() async {

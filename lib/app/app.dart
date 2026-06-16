@@ -1,14 +1,13 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import 'bindings/initial_binding.dart';
-import 'core/permissions/app_permission_service.dart';
 import 'modules/main_tab/controllers/main_tab_controller.dart';
 import 'core/widgets/keyboard_dismiss_on_tap.dart';
+import 'report/report_manager.dart';
 import 'routes/app_pages.dart';
 import 'routes/app_routes.dart';
 import 'theme/app_colors.dart';
@@ -23,25 +22,24 @@ class FunnyLoanApp extends StatefulWidget {
 
 class _FunnyLoanAppState extends State<FunnyLoanApp>
     with WidgetsBindingObserver {
-  bool _requestedNotificationPermission = false;
-  bool _requestedTrackingPermission = false;
-  bool _isPumpingStartupPermissions = false;
-  bool _isRequestingForegroundPermission = false;
   bool _ignoreNextResumeHomeRefresh = false;
-  Timer? _networkPermissionRetryTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _pumpStartupPermissions();
+      if (Get.isRegistered<ReportManager>()) {
+        unawaited(Get.find<ReportManager>().onAppStarted());
+      }
     });
   }
 
   @override
   void dispose() {
-    _networkPermissionRetryTimer?.cancel();
+    if (Get.isRegistered<ReportManager>()) {
+      unawaited(Get.find<ReportManager>().dispose());
+    }
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -51,16 +49,19 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
     if ((state == AppLifecycleState.inactive ||
             state == AppLifecycleState.paused ||
             state == AppLifecycleState.hidden) &&
-        _isRequestingForegroundPermission) {
+        _reportManager?.isRequestingForegroundPermission == true) {
       _ignoreNextResumeHomeRefresh = true;
     }
     if (state == AppLifecycleState.resumed) {
+      final reportManager = _reportManager;
+      if (reportManager != null) {
+        unawaited(reportManager.onAppResumed());
+      }
       if (_ignoreNextResumeHomeRefresh) {
         _ignoreNextResumeHomeRefresh = false;
       } else if (Get.isRegistered<MainTabController>()) {
         Get.find<MainTabController>().onAppResumed();
       }
-      unawaited(_pumpStartupPermissions());
     }
   }
 
@@ -104,71 +105,6 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
     );
   }
 
-  Future<void> _pumpStartupPermissions() async {
-    if (_isPumpingStartupPermissions) {
-      return;
-    }
-    _isPumpingStartupPermissions = true;
-    try {
-      final hasNetwork = await _hasUsableNetwork();
-      if (!hasNetwork) {
-        _schedulePermissionRetry();
-        return;
-      }
-
-      if (!_requestedNotificationPermission) {
-        _requestedNotificationPermission = true;
-        await _requestForegroundPermission(
-          AppPermissionService.requestNotification,
-        );
-      }
-
-      final lifecycleState = WidgetsBinding.instance.lifecycleState;
-      if (lifecycleState != AppLifecycleState.resumed) {
-        return;
-      }
-
-      if (!_requestedTrackingPermission) {
-        _requestedTrackingPermission = true;
-        await _requestForegroundPermission(
-          AppPermissionService.requestTracking,
-        );
-      }
-    } finally {
-      _isPumpingStartupPermissions = false;
-    }
-  }
-
-  void _schedulePermissionRetry() {
-    _networkPermissionRetryTimer?.cancel();
-    _networkPermissionRetryTimer = Timer(const Duration(seconds: 2), () {
-      if (!mounted) {
-        return;
-      }
-      unawaited(_pumpStartupPermissions());
-    });
-  }
-
-  Future<bool> _hasUsableNetwork() async {
-    try {
-      final result = await InternetAddress.lookup('example.com');
-      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    }
-  }
-
-  Future<T> _requestForegroundPermission<T>(
-    Future<T> Function() request,
-  ) async {
-    _isRequestingForegroundPermission = true;
-    try {
-      return await request();
-    } finally {
-      _isRequestingForegroundPermission = false;
-    }
-  }
-
   void _handleRoutingChanged(Routing? routing) {
     if (routing?.current != AppRoutes.home ||
         !Get.isRegistered<MainTabController>()) {
@@ -176,6 +112,9 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
     }
     Get.find<MainTabController>().onHomeRouteVisible();
   }
+
+  ReportManager? get _reportManager =>
+      Get.isRegistered<ReportManager>() ? Get.find<ReportManager>() : null;
 
   void _configureEasyLoading() {
     EasyLoading.instance

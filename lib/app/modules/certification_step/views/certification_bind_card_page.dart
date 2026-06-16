@@ -1,13 +1,22 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 
+import '../../../core/native/native_bridge.dart';
+import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/json/json.dart';
 import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../network/models/network_response.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
@@ -18,6 +27,26 @@ import 'widgets/enum_selection_sheet.dart';
 
 typedef BindCardProductDetailFlowRunner =
     Future<void> Function(String productId);
+typedef BindCardCameraPermissionRequester = Future<PermissionStatus> Function();
+typedef BindCardAppSettingsOpener = Future<bool> Function();
+typedef BindCardFaceTokenFetcher =
+    Future<BindCardFaceTokenResult> Function(Map<String, dynamic> body);
+typedef BindCardTrustDecisionLivenessLauncher =
+    Future<TrustDecisionLivenessResult> Function(String unwarned);
+typedef BindCardFaceImageFilePathBuilder =
+    Future<String> Function(String imageBase64);
+
+class BindCardFaceTokenResult {
+  const BindCardFaceTokenResult({
+    required this.grayly,
+    required this.unwarned,
+    required this.cithrens,
+  });
+
+  final int grayly;
+  final String unwarned;
+  final String cithrens;
+}
 
 class CertificationBindCardPage extends StatefulWidget {
   const CertificationBindCardPage({
@@ -25,10 +54,20 @@ class CertificationBindCardPage extends StatefulWidget {
     this.apiService,
     this.productDetailFlowRunner =
         ApiNavigationHelper.fetchProductDetailByProductId,
+    this.requestCameraPermission = AppPermissionService.requestCamera,
+    this.openAppSettingsPage = AppPermissionService.openAppSettingsPage,
+    this.fetchFaceToken = _defaultFetchBindCardFaceToken,
+    this.showTrustDecisionLiveness = NativeBridge.showTrustDecisionLiveness,
+    this.faceImageFilePathBuilder = _defaultBindCardFaceImageFilePathBuilder,
   });
 
   final ApiService? apiService;
   final BindCardProductDetailFlowRunner productDetailFlowRunner;
+  final BindCardCameraPermissionRequester requestCameraPermission;
+  final BindCardAppSettingsOpener openAppSettingsPage;
+  final BindCardFaceTokenFetcher fetchFaceToken;
+  final BindCardTrustDecisionLivenessLauncher showTrustDecisionLiveness;
+  final BindCardFaceImageFilePathBuilder faceImageFilePathBuilder;
 
   @override
   State<CertificationBindCardPage> createState() =>
@@ -63,6 +102,7 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
   final Set<BindCardFieldData> _dismissedSuggestionFields =
       <BindCardFieldData>{};
   BindCardFieldData? _activeSuggestionField;
+  late final String _pageStartTime = _currentSecondsTimestamp();
 
   @override
   void initState() {
@@ -422,11 +462,11 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
     try {
       EasyLoading.show();
       final response = await _apiService.submitBindCard(body: body);
-      if (_pageArgs.isChange) {
-        await _changeOrderBankCard(response);
-      } else {
-        await widget.productDetailFlowRunner(productId);
+      if (response.code == 20000) {
+        await _handleLivenessRequired(body);
+        return;
       }
+      await _handleBindCardSubmitSuccess(response);
     } catch (error) {
       if (!mounted) {
         return;
@@ -438,6 +478,129 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  Future<void> _handleLivenessRequired(Map<String, dynamic> body) async {
+    final permissionStatus = await widget.requestCameraPermission();
+    if (!mounted) {
+      return;
+    }
+    if (!permissionStatus.isGranted) {
+      EasyLoading.dismiss();
+      await _showCameraPermissionDialog(context);
+      return;
+    }
+
+    final faceTokenResult = await widget.fetchFaceToken(body);
+    if (!mounted) {
+      return;
+    }
+    if (faceTokenResult.grayly != 200) {
+      EasyLoading.dismiss();
+      EasyLoading.showToast(
+        faceTokenResult.cithrens.isNotEmpty
+            ? faceTokenResult.cithrens
+            : 'Failed to get face token',
+      );
+      return;
+    }
+    if (faceTokenResult.unwarned.isEmpty) {
+      EasyLoading.dismiss();
+      EasyLoading.showToast('Failed to get face token');
+      return;
+    }
+
+    EasyLoading.dismiss();
+    final result = await widget.showTrustDecisionLiveness(
+      faceTokenResult.unwarned,
+    );
+    if (!result.success) {
+      EasyLoading.showToast(
+        result.message.isNotEmpty
+            ? result.message
+            : 'Liveness verification failed',
+      );
+      return;
+    }
+
+    EasyLoading.show();
+    final imageFilePath = result.image.trim().isEmpty
+        ? ''
+        : await widget.faceImageFilePathBuilder(result.image.trim());
+    final livenessBody = Map<String, dynamic>.from(body)
+      ..addAll(<String, dynamic>{
+        'draggingly': '7',
+        'shammying': result.livenessId.trim(),
+        'attach': '',
+        'workbook': '',
+        'rapaciousness': faceTokenResult.unwarned.trim(),
+      });
+    final response = await _apiService.submitBindCard(
+      body: livenessBody,
+      filePath: imageFilePath.isEmpty ? null : imageFilePath,
+    );
+    if (response.code == 20000) {
+      developer.log(
+        'submitBindCard returned code 20000 after liveness',
+        name: 'CertificationBindCardPage',
+      );
+      return;
+    }
+    await _handleBindCardSubmitSuccess(response);
+  }
+
+  Future<void> _handleBindCardSubmitSuccess(NetworkResponse response) async {
+    if (_pageArgs.isChange) {
+      await _changeOrderBankCard(response);
+    } else {
+      _reportRiskScene(ReportRiskScene.bindCardSuccess);
+      await widget.productDetailFlowRunner(_pageArgs.productId);
+    }
+  }
+
+  Future<void> _showCameraPermissionDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Camera permission required'),
+          content: const Text(
+            'Please enable camera access in Settings to continue.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await widget.openAppSettingsPage();
+              },
+              child: const Text('Settings'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _reportRiskScene(String sceneType) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: _pageArgs.productId,
+        orderNo: _pageArgs.orderNo,
+        startTime: _pageStartTime,
+      ),
+    );
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
   Future<void> _changeOrderBankCard(NetworkResponse response) async {
@@ -461,6 +624,31 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
     }
     return null;
   }
+}
+
+Future<String> _defaultBindCardFaceImageFilePathBuilder(
+  String imageBase64,
+) async {
+  final normalized = imageBase64.contains(',')
+      ? imageBase64.split(',').last
+      : imageBase64;
+  final bytes = base64Decode(normalized);
+  final file = File(
+    '${Directory.systemTemp.path}/bind_card_face_${DateTime.now().microsecondsSinceEpoch}.jpg',
+  );
+  await file.writeAsBytes(bytes, flush: true);
+  return file.path;
+}
+
+Future<BindCardFaceTokenResult> _defaultFetchBindCardFaceToken(
+  Map<String, dynamic> body,
+) async {
+  final response = await Get.find<ApiService>().fetchFaceToken(body);
+  return BindCardFaceTokenResult(
+    grayly: response.data['grayly'].intOrNull ?? 0,
+    unwarned: response.data['unwarned'].stringValue,
+    cithrens: response.data['cithrens'].stringValue,
+  );
 }
 
 class _BindCardPageArgs {

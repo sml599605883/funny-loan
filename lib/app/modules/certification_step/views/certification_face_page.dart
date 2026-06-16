@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,6 +13,7 @@ import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
@@ -36,7 +38,7 @@ class FaceTokenResult {
   final String cithrens;
 }
 
-class CertificationFacePage extends StatelessWidget {
+class CertificationFacePage extends StatefulWidget {
   const CertificationFacePage({
     super.key,
     this.requestCameraPermission = AppPermissionService.requestCamera,
@@ -51,6 +53,13 @@ class CertificationFacePage extends StatelessWidget {
   final FaceTokenFetcher fetchFaceToken;
   final TrustDecisionLivenessLauncher showTrustDecisionLiveness;
   final FaceImageFilePathBuilder faceImageFilePathBuilder;
+
+  @override
+  State<CertificationFacePage> createState() => _CertificationFacePageState();
+}
+
+class _CertificationFacePageState extends State<CertificationFacePage> {
+  late final String _pageStartTime = _currentSecondsTimestamp();
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +120,7 @@ class CertificationFacePage extends StatelessWidget {
       bottomNavigationBar: _FaceSubmitButton(
         onTap: () async {
           EasyLoading.show();
-          final permissionStatus = await requestCameraPermission();
+          final permissionStatus = await widget.requestCameraPermission();
           if (!context.mounted) {
             return;
           }
@@ -120,7 +129,7 @@ class CertificationFacePage extends StatelessWidget {
             await _showCameraPermissionDialog(context);
             return;
           }
-          final faceTokenResult = await fetchFaceToken(
+          final faceTokenResult = await widget.fetchFaceToken(
             pageArgs.faceTokenRequestBody,
           );
           if (!context.mounted) {
@@ -148,14 +157,21 @@ class CertificationFacePage extends StatelessWidget {
           }
 
           EasyLoading.dismiss();
-          final result = await showTrustDecisionLiveness(
+          final result = await widget.showTrustDecisionLiveness(
             faceTokenResult.unwarned,
           );
+          unawaited(_reportFaceRecognitionResult(result));
           if (result.success) {
             try {
               await _uploadFaceResult(
                 result: result,
                 unwarned: faceTokenResult.unwarned,
+              );
+              _reportRiskScene(
+                sceneType: ReportRiskScene.faceUploadSuccess,
+                productId: pageArgs.productId,
+                orderNo: pageArgs.orderNo,
+                startTime: _pageStartTime,
               );
               final productId = pageArgs.productId;
               if (productId.isNotEmpty) {
@@ -196,7 +212,7 @@ class CertificationFacePage extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
-                await openAppSettingsPage();
+                await widget.openAppSettingsPage();
               },
               child: const Text('Settings'),
             ),
@@ -249,7 +265,7 @@ class CertificationFacePage extends StatelessWidget {
       throw const FormatException('Missing liveness image');
     }
 
-    final filePath = await faceImageFilePathBuilder(imageBase64);
+    final filePath = await widget.faceImageFilePathBuilder(imageBase64);
     await Get.find<ApiService>().uploadIdentityOrFace(
       body: <String, dynamic>{
         'outcrop': '10',
@@ -264,30 +280,65 @@ class CertificationFacePage extends StatelessWidget {
     );
   }
 
-  static Future<String> _defaultFaceImageFilePathBuilder(
-    String imageBase64,
+  Future<void> _reportFaceRecognitionResult(
+    TrustDecisionLivenessResult result,
   ) async {
-    final normalized = imageBase64.contains(',')
-        ? imageBase64.split(',').last
-        : imageBase64;
-    final bytes = base64Decode(normalized);
-    final file = File(
-      '${Directory.systemTemp.path}/certification_face_${DateTime.now().microsecondsSinceEpoch}.jpg',
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    await Get.find<ReportManager>().reportFaceRecognitionResult(
+      livenessId: result.livenessId,
+      requestId: result.sequenceId,
+      resultCode: result.code.toString(),
+      result: result.message,
     );
-    await file.writeAsBytes(bytes, flush: true);
-    return file.path;
   }
 
-  static Future<FaceTokenResult> _defaultFetchFaceToken(
-    Map<String, dynamic> body,
-  ) async {
-    final response = await Get.find<ApiService>().fetchFaceToken(body);
-    return FaceTokenResult(
-      grayly: response.data['grayly'].intOrNull ?? 0,
-      unwarned: response.data['unwarned'].stringValue,
-      cithrens: response.data['cithrens'].stringValue,
+  void _reportRiskScene({
+    required String sceneType,
+    required String productId,
+    required String orderNo,
+    required String startTime,
+  }) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: productId,
+        orderNo: orderNo,
+        startTime: startTime,
+      ),
     );
   }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+  }
+}
+
+Future<String> _defaultFaceImageFilePathBuilder(String imageBase64) async {
+  final normalized = imageBase64.contains(',')
+      ? imageBase64.split(',').last
+      : imageBase64;
+  final bytes = base64Decode(normalized);
+  final file = File(
+    '${Directory.systemTemp.path}/certification_face_${DateTime.now().microsecondsSinceEpoch}.jpg',
+  );
+  await file.writeAsBytes(bytes, flush: true);
+  return file.path;
+}
+
+Future<FaceTokenResult> _defaultFetchFaceToken(
+  Map<String, dynamic> body,
+) async {
+  final response = await Get.find<ApiService>().fetchFaceToken(body);
+  return FaceTokenResult(
+    grayly: response.data['grayly'].intOrNull ?? 0,
+    unwarned: response.data['unwarned'].stringValue,
+    cithrens: response.data['cithrens'].stringValue,
+  );
 }
 
 class _FaceSubmitButton extends StatelessWidget {
@@ -358,4 +409,6 @@ class _CertificationFaceArgs {
   Map<String, dynamic> get faceTokenRequestBody => payloadMap;
 
   String get productId => (payloadMap['productId'] as String? ?? '').trim();
+
+  String get orderNo => (payloadMap['orderNo'] as String? ?? '').trim();
 }

@@ -37,8 +37,8 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>We use your camera so you can capture required identity and application documents.</string>
-	<key>NSContactsUsageDescription</key>
-	<string>We use your contacts so you can select emergency contact information for verification.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We use your location to support risk control, compliance checks, and service security.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We use your location to support risk control, compliance checks, and service security.</string>
 	<key>NSUserTrackingUsageDescription</key>
@@ -66,10 +66,6 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

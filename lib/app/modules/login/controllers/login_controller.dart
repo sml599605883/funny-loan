@@ -10,6 +10,7 @@ import '../../../network/api/api_service.dart';
 import '../../../network/core/common_params_builder.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../network/network_module.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/navigation_helper.dart';
 
 class LoginController extends GetxController {
@@ -30,6 +31,7 @@ class LoginController extends GetxController {
   final isSubmitting = false.obs;
 
   Timer? _countdownTimer;
+  String _loginStartTime = _currentSecondsTimestamp();
 
   @override
   void onInit() {
@@ -64,6 +66,7 @@ class LoginController extends GetxController {
     isRequestingCode.value = true;
     try {
       EasyLoading.show(status: 'Loading...');
+      _loginStartTime = _currentSecondsTimestamp();
       final response = await apiService.requestLoginSmsCode({
         'grieving': phoneText.value.trim(),
       });
@@ -112,6 +115,16 @@ class LoginController extends GetxController {
         responseToken,
       );
       CommonParamsBuilder.updateSessionId(responseToken);
+      if (Get.isRegistered<ReportManager>()) {
+        final reportManager = Get.find<ReportManager>();
+        unawaited(reportManager.onLoginSuccess());
+        unawaited(
+          reportManager.reportRiskScene(
+            sceneType: ReportRiskScene.loginSuccess,
+            startTime: _loginStartTime,
+          ),
+        );
+      }
       NavigationHelper.offAllToHome();
     } catch (error) {
       EasyLoading.dismiss();
@@ -180,6 +193,10 @@ class LoginController extends GetxController {
 
   String _errorMessage(Object error) {
     return NetworkErrorMapper.map(error);
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
   @override

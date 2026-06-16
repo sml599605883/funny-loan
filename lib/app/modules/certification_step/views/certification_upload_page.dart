@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -14,6 +15,7 @@ import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
@@ -167,6 +169,17 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
   late final ApiService _apiService =
       widget.apiService ?? Get.find<ApiService>();
   bool _isUploading = false;
+  late final String _pageStartTime = _currentSecondsTimestamp();
+  String _identityUploadStartTime = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _reportRiskScene(
+      ReportRiskScene.identityUploadEnter,
+      startTime: _pageStartTime,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -239,6 +252,7 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
   ) async {
     Navigator.of(sheetContext).pop();
     EasyLoading.show();
+    _identityUploadStartTime = _currentSecondsTimestamp();
     final filePath = source == _UploadSource.camera
         ? await _imagePicker.pickFromCamera()
         : await _imagePicker.pickFromGallery();
@@ -276,6 +290,8 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
         arguments: <String, dynamic>{
           'identityType': _identityType(),
           'productId': _productId(),
+          'orderNo': _orderNo(),
+          'startTime': _identityUploadStartTime,
           'result': response.data.mapValue,
         },
       );
@@ -324,8 +340,36 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
     return _payloadString(payloadMap['productId']);
   }
 
+  String _orderNo() {
+    final arguments = Get.arguments;
+    final routeArguments = arguments is Map
+        ? arguments
+        : const <String, dynamic>{};
+    final payload = routeArguments['payload'];
+    final payloadMap = payload is Map ? payload : const <String, dynamic>{};
+    return _payloadString(payloadMap['orderNo']);
+  }
+
+  void _reportRiskScene(String sceneType, {required String startTime}) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: _productId(),
+        orderNo: _orderNo(),
+        startTime: startTime,
+      ),
+    );
+  }
+
   String _payloadString(Object? value) {
     return value?.toString().trim() ?? '';
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 }
 

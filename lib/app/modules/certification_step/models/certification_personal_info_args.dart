@@ -27,4 +27,6 @@ class CertificationPersonalInfoArgs {
   }
 
   String get productId => (payloadMap['productId'] as String? ?? '').trim();
+
+  String get orderNo => (payloadMap['orderNo'] as String? ?? '').trim();
 }

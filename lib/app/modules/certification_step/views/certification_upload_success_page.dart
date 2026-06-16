@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -7,6 +9,7 @@ import '../../../core/json/json.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
@@ -116,6 +119,7 @@ class _CertificationUploadSuccessPageState
         'outcrop': '11',
         'impotencies': _pageArgs.identityType,
       });
+      _reportRiskScene(ReportRiskScene.identitySaveSuccess);
       final productId = _pageArgs.productId;
       if (productId.isNotEmpty) {
         await widget.productDetailFlowRunner(productId);
@@ -151,12 +155,28 @@ class _CertificationUploadSuccessPageState
     }
     setState(() => _birthDate = selectedBirthDate);
   }
+
+  void _reportRiskScene(String sceneType) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: _pageArgs.productId,
+        orderNo: _pageArgs.orderNo,
+        startTime: _pageArgs.startTime,
+      ),
+    );
+  }
 }
 
 class _CertificationUploadSuccessArgs {
   const _CertificationUploadSuccessArgs({
     required this.identityType,
     required this.productId,
+    required this.orderNo,
+    required this.startTime,
     required this.result,
   });
 
@@ -165,12 +185,16 @@ class _CertificationUploadSuccessArgs {
     return _CertificationUploadSuccessArgs(
       identityType: (args['identityType'] as String? ?? '').trim(),
       productId: (args['productId'] as String? ?? '').trim(),
+      orderNo: (args['orderNo'] as String? ?? '').trim(),
+      startTime: (args['startTime'] as String? ?? '').trim(),
       result: CertificationUploadSuccessResult.fromJson(args['result']),
     );
   }
 
   final String identityType;
   final String productId;
+  final String orderNo;
+  final String startTime;
   final CertificationUploadSuccessResult result;
 }
 

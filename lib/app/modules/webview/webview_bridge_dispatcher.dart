@@ -4,6 +4,7 @@ import '../../core/native/native_bridge.dart';
 import '../../core/json/json.dart';
 import '../../network/api/api_service.dart';
 import '../../network/network_module.dart';
+import '../../report/report_manager.dart';
 import '../../routes/api_navigation_helper.dart';
 import '../../routes/navigation_helper.dart';
 import 'package:get/get.dart';
@@ -253,10 +254,23 @@ class WebViewBridgeDispatcher {
   }
 
   static Future<void> _defaultReportRisk(Json payload) async {
+    if (Get.isRegistered<ReportManager>()) {
+      await Get.find<ReportManager>().reportRiskScene(
+        sceneType: ReportRiskScene.webViewRisk,
+        productId: payload['skoals'].stringValue.trim(),
+        orderNo: payload['rejectee'].stringValue.trim(),
+        startTime: _currentSecondsTimestamp(),
+      );
+      return;
+    }
     if (!Get.isRegistered<ApiService>()) {
       return;
     }
     await Get.find<ApiService>().reportRiskEvent(payload.mapValue);
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 
   static Future<void> _defaultOpenCardList(

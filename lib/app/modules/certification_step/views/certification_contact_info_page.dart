@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
@@ -9,6 +11,7 @@ import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
@@ -49,6 +52,7 @@ class _CertificationContactInfoPageState
   bool _isLoading = true;
   bool _isSubmitting = false;
   String _errorMessage = '';
+  late final String _pageStartTime = _currentSecondsTimestamp();
 
   String get _displayTitle {
     if (_pageArgs.title.isNotEmpty) {
@@ -344,6 +348,7 @@ class _CertificationContactInfoPageState
     try {
       EasyLoading.show();
       await _apiService.saveContactInfo(body);
+      _reportRiskScene(ReportRiskScene.contactInfoSaveSuccess);
       await widget.productDetailFlowRunner(productId);
     } catch (error) {
       if (!mounted) {
@@ -356,6 +361,24 @@ class _CertificationContactInfoPageState
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  void _reportRiskScene(String sceneType) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: _pageArgs.productId,
+        orderNo: _pageArgs.orderNo,
+        startTime: _pageStartTime,
+      ),
+    );
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 }
 

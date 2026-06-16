@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
@@ -7,6 +9,7 @@ import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../report/report_manager.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
@@ -53,6 +56,7 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
   bool _isLoading = true;
   bool _isSubmitting = false;
   String _errorMessage = '';
+  late final String _pageStartTime = _currentSecondsTimestamp();
 
   String get _displayTitle {
     if (_pageArgs.title.isNotEmpty) {
@@ -327,7 +331,8 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
       return;
     }
 
-    final options = _salaryDayOptionsByField[field.saveKey] ?? const <SalaryDayGroup>[];
+    final options =
+        _salaryDayOptionsByField[field.saveKey] ?? const <SalaryDayGroup>[];
     if (options.isEmpty) {
       EasyLoading.showToast(
         field.placeholder.isNotEmpty
@@ -347,7 +352,8 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
         return SalaryDaySelectionSheet(
           options: options,
           currentGroupValue: currentSelection?.groupValue ?? '',
-          currentChildValue: currentSelection?.submitValue ?? field.selectedValue,
+          currentChildValue:
+              currentSelection?.submitValue ?? field.selectedValue,
         );
       },
     );
@@ -461,6 +467,7 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
     try {
       EasyLoading.show();
       await _apiService.saveWorkInfo(body);
+      _reportRiskScene(ReportRiskScene.workInfoSaveSuccess);
       await widget.productDetailFlowRunner(productId);
     } catch (error) {
       if (!mounted) {
@@ -473,6 +480,24 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  void _reportRiskScene(String sceneType) {
+    if (!Get.isRegistered<ReportManager>()) {
+      return;
+    }
+    unawaited(
+      Get.find<ReportManager>().reportRiskScene(
+        sceneType: sceneType,
+        productId: _pageArgs.productId,
+        orderNo: _pageArgs.orderNo,
+        startTime: _pageStartTime,
+      ),
+    );
+  }
+
+  static String _currentSecondsTimestamp() {
+    return (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
   }
 }
 
