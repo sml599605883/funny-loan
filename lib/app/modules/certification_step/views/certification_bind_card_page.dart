@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
+import '../../../core/json/json.dart';
+import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
+import '../../../network/models/network_response.dart';
 import '../../../routes/api_navigation_helper.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
@@ -84,7 +87,7 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
         bottom: false,
         child: Column(
           children: [
-            _BindCardHeader(title: _pageArgs.displayTitle),
+            AppPageHeader(title: _pageArgs.displayTitle),
             SizedBox(height: 16.h),
             CertificationUploadHintBanner(text: _topHintText),
             SizedBox(height: 25.h),
@@ -418,8 +421,12 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
     setState(() => _isSubmitting = true);
     try {
       EasyLoading.show();
-      await _apiService.submitBindCard(body: body);
-      await widget.productDetailFlowRunner(productId);
+      final response = await _apiService.submitBindCard(body: body);
+      if (_pageArgs.isChange) {
+        await _changeOrderBankCard(response);
+      } else {
+        await widget.productDetailFlowRunner(productId);
+      }
     } catch (error) {
       if (!mounted) {
         return;
@@ -431,6 +438,19 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  Future<void> _changeOrderBankCard(NetworkResponse response) async {
+    final bindId = response.data['triaged'].rawValue;
+    final changeResponse = await _apiService.changeBankCard(<String, dynamic>{
+      'nosh': _pageArgs.orderNo,
+      'triaged': bindId,
+    });
+    final redirectUrl = changeResponse.data['copybooks'].stringValue.trim();
+    if (redirectUrl.isEmpty) {
+      return;
+    }
+    NavigationHelper.toWebView(redirectUrl);
   }
 
   BindCardFieldData? _fieldForKey(String saveKey) {
@@ -447,6 +467,8 @@ class _BindCardPageArgs {
   const _BindCardPageArgs({
     required this.title,
     required this.productId,
+    required this.orderNo,
+    required this.isChange,
     required this.routeKey,
   });
 
@@ -461,60 +483,19 @@ class _BindCardPageArgs {
     return _BindCardPageArgs(
       title: (payloadMap['nextStepTitle'] as String? ?? '').trim(),
       productId: (payloadMap['productId'] as String? ?? '').trim(),
+      orderNo: (payloadMap['orderNo'] as String? ?? '').trim(),
+      isChange: Json(payloadMap['ischange']).boolValue,
       routeKey: (routeArguments['routeKey'] as String? ?? 'bank').trim(),
     );
   }
 
   final String title;
   final String productId;
+  final String orderNo;
+  final bool isChange;
   final String routeKey;
 
   String get displayTitle => title.isNotEmpty ? title : 'Bind bank card';
-}
-
-class _BindCardHeader extends StatelessWidget {
-  const _BindCardHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44.h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                height: 24 / 20,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 11.w,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => NavigationHelper.back<void>(),
-              child: Image.asset(
-                'assets/icon_back.png',
-                width: 25.w,
-                height: 25.h,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _BindCardMethodTabs extends StatelessWidget {

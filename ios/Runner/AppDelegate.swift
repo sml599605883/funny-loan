@@ -1,6 +1,7 @@
 import Flutter
 import CFNetwork
 import UIKit
+import StoreKit
 import TDMobRisk
 
 @main
@@ -36,6 +37,8 @@ import TDMobRisk
           result(self.systemProxySettings())
         case "showTrustDecisionLiveness":
           self.showTrustDecisionLiveness(call.arguments, result: result)
+        case "requestAppReview":
+          self.requestAppReview(result: result)
         default:
           result(FlutterMethodNotImplemented)
         }
@@ -127,6 +130,18 @@ import TDMobRisk
           result(self.wrapLivenessResult(success: false, payload: failResult))
         }
       )
+  }
+
+  private func requestAppReview(result: @escaping FlutterResult) {
+    DispatchQueue.main.async {
+      if let scene = UIApplication.shared.connectedScenes
+        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+        SKStoreReviewController.requestReview(in: scene)
+      } else {
+        SKStoreReviewController.requestReview()
+      }
+      result(true)
+    }
   }
 
   private func wrapLivenessResult(success: Bool, payload: [AnyHashable: Any]?) -> [String: Any] {

@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import '../modules/card_list/views/card_list_page.dart';
 import '../modules/certification_step/views/certification_step_page.dart';
 import '../modules/certification_step/views/certification_bind_card_page.dart';
 import '../modules/certification_step/views/certification_face_page.dart';
@@ -14,6 +15,7 @@ import '../modules/login/views/login_page.dart';
 import '../modules/main_tab/views/main_tab_page.dart';
 import '../modules/order_list/views/order_list_page.dart';
 import '../modules/setting/views/setting_page.dart';
+import '../modules/webview/views/webview_page.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -89,6 +91,27 @@ class AppPages {
     GetPage(
       name: AppRoutes.certificationBindCard,
       page: () => const CertificationBindCardPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.cardList,
+      page: () => const CardListPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.webview,
+      page: () {
+        final arguments = Get.arguments;
+        final mapped = arguments is Map
+            ? Map<String, dynamic>.from(arguments)
+            : const <String, dynamic>{};
+        return FunnyLoanWebViewPage(
+          initialUrl: (mapped['url'] as String? ?? '').trim(),
+          initialTitle: (mapped['title'] as String? ?? '').trim(),
+        );
+      },
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

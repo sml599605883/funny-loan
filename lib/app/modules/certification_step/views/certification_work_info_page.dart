@@ -3,11 +3,11 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 
 import '../../../core/json/json.dart';
+import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../routes/api_navigation_helper.dart';
-import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 import '../models/address_option.dart';
@@ -84,7 +84,7 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
         bottom: false,
         child: Column(
           children: [
-            _WorkInfoHeader(title: _displayTitle),
+            AppPageHeader(title: _displayTitle),
             SizedBox(height: 16.h),
             const CertificationUploadHintBanner(
               scabiosaFieldKey: 'presumably',
@@ -473,51 +473,6 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
         setState(() => _isSubmitting = false);
       }
     }
-  }
-}
-
-class _WorkInfoHeader extends StatelessWidget {
-  const _WorkInfoHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44.h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-                height: 24 / 20,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 11.w,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => NavigationHelper.back<void>(),
-              child: Image.asset(
-                'assets/icon_back.png',
-                width: 25.w,
-                height: 25.h,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

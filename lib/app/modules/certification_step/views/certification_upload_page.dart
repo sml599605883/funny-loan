@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -180,7 +181,7 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    _CertificationHeader(),
+                    const AppPageHeader(title: 'Identity verification'),
                     SizedBox(height: 16.h),
                     const CertificationUploadHintBanner(
                       scabiosaFieldKey: 'beveling',
@@ -325,49 +326,6 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
 
   String _payloadString(Object? value) {
     return value?.toString().trim() ?? '';
-  }
-}
-
-class _CertificationHeader extends StatelessWidget {
-  const _CertificationHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44.h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              'Identity verification',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: AppColors.certificationTextPrimary,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-                height: 24 / 20,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 11.w,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => NavigationHelper.back<void>(),
-              child: Image.asset(
-                'assets/icon_back.png',
-                width: 25.w,
-                height: 25.h,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

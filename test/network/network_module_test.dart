@@ -92,7 +92,10 @@ void main() {
         final body = options.data! as Map<String, dynamic>;
         expect(body['amount'], '120000');
         expect(body['period'], 12);
-        expect(body['biz_nonce'], matches(RegExp(r'^\d{6}$')));
+        expect(
+          options.uri.queryParameters['cycloid'],
+          matches(RegExp(r'^\d{6}$')),
+        );
       },
     );
 
@@ -126,8 +129,8 @@ void main() {
           isTrue,
         );
         expect(
-          formData.fields.any((entry) => entry.key == 'biz_nonce'),
-          isTrue,
+          options.uri.queryParameters['cycloid'],
+          matches(RegExp(r'^\d{6}$')),
         );
         expect(formData.files.length, 1);
         expect(formData.files.first.key, 'attachment');

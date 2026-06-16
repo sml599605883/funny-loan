@@ -2437,6 +2437,132 @@ void main() {
   );
 
   testWidgets(
+    'bind card page changes order bank card after change-account submit',
+    (WidgetTester tester) async {
+      final apiService = _FakeApiService(
+        expectedProductId: '123',
+        responseData: const <String, dynamic>{},
+        bindCardSubmitResponseData: const <String, dynamic>{
+          'triaged': 'bind-9',
+        },
+        changeBankCardResponseData: const <String, dynamic>{
+          'copybooks': 'https://example.test/change-card-result',
+        },
+        bindCardInfoResponseData: const <String, dynamic>{
+          'rekeys': <String, dynamic>{
+            'tingling': <Map<String, dynamic>>[
+              <String, dynamic>{
+                'hazinesses': 'Bank',
+                'outcrop': 2,
+                'tingling': <Map<String, dynamic>>[
+                  <String, dynamic>{
+                    'hazinesses': 'Select your recipient bank',
+                    'unplait': 'channelCode',
+                    'tissual': 'Please select your recipient bank',
+                    'dulses': 'enum',
+                    'scabiosa': <Map<String, dynamic>>[
+                      <String, dynamic>{
+                        'governmental': 'Union Bank',
+                        'outcrop': 'UBP',
+                      },
+                    ],
+                    'disrelished': 'UBP',
+                    'triadisms': 'Union Bank',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'First Name',
+                    'unplait': 'firstName',
+                    'tissual': 'First Name',
+                    'dulses': 'txt',
+                    'disrelished': 'John',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Last Name',
+                    'unplait': 'lastName',
+                    'tissual': 'Last Name',
+                    'dulses': 'txt',
+                    'disrelished': 'Doe',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Bank Account',
+                    'unplait': 'cardNo',
+                    'tissual': 'Please entry your bank account',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                  <String, dynamic>{
+                    'hazinesses': 'Repeat Bank Account',
+                    'unplait': 'confirmCardNo',
+                    'tissual': 'Ensure the account number is correct',
+                    'dulses': 'txt',
+                    'disrelished': '',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      );
+      Get.put<ApiService>(apiService, permanent: true);
+      String? fetchedProductId;
+      Map<String, dynamic>? webViewArguments;
+
+      await tester.pumpWidget(
+        _buildTestApp(
+          bindCardPageBuilder: () => CertificationBindCardPage(
+            productDetailFlowRunner: (productId) async {
+              fetchedProductId = productId;
+            },
+          ),
+          webViewPageBuilder: () {
+            final arguments = Get.arguments;
+            webViewArguments = arguments is Map
+                ? Map<String, dynamic>.from(arguments)
+                : const <String, dynamic>{};
+            return const Scaffold(body: Text('Change card result webview'));
+          },
+        ),
+      );
+
+      Get.toNamed<dynamic>(
+        AppRoutes.certificationBindCard,
+        arguments: <String, dynamic>{
+          'routeKey': 'bank',
+          'payload': <String, dynamic>{
+            'nextStepTitle': 'Informasi bank',
+            'productId': '123',
+            'orderNo': 'order-9',
+            'ischange': true,
+          },
+        },
+      );
+      await tester.pump();
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('certification_bind_card_cardNo_input')),
+        '1234567890',
+      );
+      await tester.enterText(
+        find.byKey(const Key('certification_bind_card_confirmCardNo_input')),
+        '1234567890',
+      );
+      await tester.tap(find.text('Submit'));
+      await tester.pumpAndSettle();
+
+      expect(apiService.changedBankCardBody, <String, dynamic>{
+        'nosh': 'order-9',
+        'triaged': 'bind-9',
+      });
+      expect(find.text('Change card result webview'), findsOneWidget);
+      expect(webViewArguments, <String, dynamic>{
+        'url': 'https://example.test/change-card-result',
+      });
+      expect(fetchedProductId, isNull);
+    },
+  );
+
+  testWidgets(
     'bind card page text input displays disrelished instead of triadisms',
     (WidgetTester tester) async {
       Get.put<ApiService>(
@@ -3050,6 +3176,7 @@ Widget _buildTestApp({
   Widget Function()? personalInfoPageBuilder,
   Widget Function()? workInfoPageBuilder,
   Widget Function()? bindCardPageBuilder,
+  Widget Function()? webViewPageBuilder,
 }) {
   return GetMaterialApp(
     builder: (context, child) {
@@ -3093,6 +3220,11 @@ Widget _buildTestApp({
         name: AppRoutes.certificationBindCard,
         page: bindCardPageBuilder ?? () => const CertificationBindCardPage(),
       ),
+      GetPage(
+        name: AppRoutes.webview,
+        page:
+            webViewPageBuilder ?? () => const Scaffold(body: SizedBox.shrink()),
+      ),
     ],
   );
 }
@@ -3128,6 +3260,8 @@ class _FakeApiService extends ApiService {
     this.productDetailResponseData = const <String, dynamic>{},
     this.userInfoResponseData = const <String, dynamic>{},
     this.bindCardInfoResponseData = const <String, dynamic>{},
+    this.bindCardSubmitResponseData = const <String, dynamic>{},
+    this.changeBankCardResponseData = const <String, dynamic>{},
     this.fetchError,
   }) : _responseData = responseData,
        super(
@@ -3162,6 +3296,8 @@ class _FakeApiService extends ApiService {
   final Map<String, dynamic> productDetailResponseData;
   final Map<String, dynamic> userInfoResponseData;
   final Map<String, dynamic> bindCardInfoResponseData;
+  final Map<String, dynamic> bindCardSubmitResponseData;
+  final Map<String, dynamic> changeBankCardResponseData;
   final String expectedProductId;
   final Object? fetchError;
   int fetchAddressOptionsCallCount = 0;
@@ -3172,6 +3308,7 @@ class _FakeApiService extends ApiService {
   Map<String, dynamic> savedWorkInfoBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedBindCardInfoParams = const <String, dynamic>{};
   Map<String, dynamic> submittedBindCardBody = const <String, dynamic>{};
+  Map<String, dynamic> changedBankCardBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedFaceTokenBody = const <String, dynamic>{};
   Map<String, dynamic> fetchedProductDetailBody = const <String, dynamic>{};
 
@@ -3338,8 +3475,19 @@ class _FakeApiService extends ApiService {
     return NetworkResponse(
       code: 0,
       message: 'success',
-      data: Json(const <String, dynamic>{}),
-      raw: const <String, dynamic>{},
+      data: Json(bindCardSubmitResponseData),
+      raw: bindCardSubmitResponseData,
+    );
+  }
+
+  @override
+  Future<NetworkResponse> changeBankCard(Map<String, dynamic> body) async {
+    changedBankCardBody = Map<String, dynamic>.from(body);
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(changeBankCardResponseData),
+      raw: changeBankCardResponseData,
     );
   }
 }

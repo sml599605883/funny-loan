@@ -53,4 +53,16 @@ abstract class AppColors {
   static const certificationUploadSuccessInputBorder = Color(0xFFECEDED);
   static const certificationUploadSuccessLabel = Color(0xFF999999);
   static const certificationUploadSuccessButton = Color(0xFF3A57B0);
+
+  static const cardListSectionCard = Color(0xFFFFFFFF);
+  static const cardListSectionHeader = Color(0xFFAECBF9);
+  static const cardListAccountSurface = Color(0xFFF2F2F2);
+  static const cardListAccountLabel = Color(0xFF999999);
+  static const cardListActionBorder = Color(0xFFD9D9D9);
+  static const cardListWarningText = Color(0xFFFF9448);
+  static const cardListMutedText = Color(0xFFC4C4C4);
+  static const cardListBdoBlue = Color(0xFF153D8A);
+  static const cardListBdoGold = Color(0xFFF4A72E);
+  static const cardListGCashBlue = Color(0xFF1262F0);
+  static const cardListMLRed = Color(0xFFDE1717);
 }

@@ -21,12 +21,28 @@ class NetworkModule {
     required this.apiService,
     required this.config,
     required this.state,
-  });
+    required CommonParamsProvider commonParamsProvider,
+  }) : _commonParamsProvider = commonParamsProvider;
 
   final NetworkClient client;
   final ApiService apiService;
   final NetworkConfig config;
   final MutableNetworkState state;
+  final CommonParamsProvider _commonParamsProvider;
+
+  Future<Map<String, dynamic>> getCommonParams() {
+    return _commonParamsProvider.getCommonParams();
+  }
+
+  Future<Map<String, dynamic>> buildQueryParameters(
+    String path, {
+    Map<String, dynamic> businessParams = const {},
+  }) {
+    return client.buildQueryParameters(
+      path,
+      businessParams: businessParams,
+    );
+  }
 
   static Future<NetworkModule> create(NetworkConfig config) async {
     String? proxyHost;
@@ -93,6 +109,7 @@ class NetworkModule {
       apiService: ApiService(client: client, cryptoUtil: cryptoUtil),
       config: config,
       state: state,
+      commonParamsProvider: commonParamsProvider,
     );
   }
 

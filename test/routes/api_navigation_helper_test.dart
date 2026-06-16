@@ -17,7 +17,6 @@ import 'package:funny_loan/app/network/models/network_response.dart';
 import 'package:funny_loan/app/network/utils/crypto_util.dart';
 import 'package:funny_loan/app/routes/app_routes.dart';
 import 'package:funny_loan/app/routes/api_navigation_helper.dart';
-import 'package:funny_loan/app/routes/navigation_target_mapper.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -61,72 +60,45 @@ void main() {
           .setMockMethodCallHandler(permissionChannel, null);
     });
 
-    test('resolves recredit scheme to app page decision', () {
-      final decision = ApiNavigationHelper.resolveDecision(
-        Json(<String, dynamic>{
-          'gewurztraminers': 302,
-          'sidearms': 'gold://pocket/recredit',
-          'outcrop': 0,
-        }),
-      );
+    testWidgets('navigateRawTarget routes app scheme to setting page', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildTestApp());
 
-      expect(decision['type'], ApiNavigationHelper.targetTypeAppPage);
-      expect(decision['normalizedAppPage'], NavigationTargetMapper.recredit);
-      expect(decision['isNative'], isTrue);
+      await ApiNavigationHelper.navigateRawTarget(
+        'ph://funny-loan/ios/MeshuggaDemised',
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('setting page'), findsOneWidget);
     });
 
-    test('resolves Unbosomed scheme with cohabiter to product detail page', () {
-      final decision = ApiNavigationHelper.resolveDecision(
-        Json(<String, dynamic>{
-          'gewurztraminers': 302,
-          'sidearms': 'ph://funny-loan/ios/Unbosomed?cohabiter=2',
-          'outcrop': 0,
-        }),
-      );
+    testWidgets('navigateRawTarget opens absolute http target in webview', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildTestApp());
 
-      expect(decision['type'], ApiNavigationHelper.targetTypeAppPage);
-      expect(
-        decision['normalizedAppPage'],
-        NavigationTargetMapper.productDetail,
-      );
-      expect(
-        decision['rawTarget'],
-        'ph://funny-loan/ios/Unbosomed?cohabiter=2',
-      );
-    });
-
-    test('resolves http target to web url decision', () {
-      final decision = ApiNavigationHelper.resolveDecision(
-        Json(<String, dynamic>{
-          'gewurztraminers': 505,
-          'sidearms': 'http://example.com/#/errorUrl?productId=1',
-          'outcrop': 1,
-        }),
-      );
-
-      expect(decision['type'], ApiNavigationHelper.targetTypeWebUrl);
-      expect(
-        (decision['webUrl'] as Uri?)?.toString(),
+      await ApiNavigationHelper.navigateRawTarget(
         'http://example.com/#/errorUrl?productId=1',
       );
-      expect(decision['isNative'], isFalse);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Loading...'), findsOneWidget);
     });
 
-    test('resolves relative h5 target with explicit web base url', () {
-      final decision = ApiNavigationHelper.resolveDecision(
-        Json(<String, dynamic>{
-          'gewurztraminers': 302,
-          'sidearms': '/#/ShowedJagger?productId=1',
-          'outcrop': 1,
-        }),
-      );
+    testWidgets(
+      'navigateRawTarget resolves relative h5 target with web base url',
+      (tester) async {
+        await tester.pumpWidget(_buildTestApp());
 
-      expect(decision['type'], ApiNavigationHelper.targetTypeWebUrl);
-      expect(
-        (decision['webUrl'] as Uri?)?.toString(),
-        'http://47.80.83.200/#/ShowedJagger?productId=1',
-      );
-    });
+        await ApiNavigationHelper.navigateRawTarget(
+          '/#/ShowedJagger?productId=1',
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Loading...'), findsOneWidget);
+      },
+    );
 
     test('parses and normalizes product detail auth items and next step', () {
       final payload = ApiNavigationHelper.parseProductDetail(
@@ -135,6 +107,9 @@ void main() {
             'isolines': '1',
             'disprovable': 'Super Prestamo',
             'rejectee': '302021063003045300522743',
+            'unfindable': '15000',
+            'temerariousness': '91',
+            'lixiviates': 'DAY',
           },
           'oocytes': <Map<String, dynamic>>[
             <String, dynamic>{
@@ -176,6 +151,9 @@ void main() {
       expect(payload['productId'], '1');
       expect(payload['productName'], 'Super Prestamo');
       expect(payload['orderNo'], '302021063003045300522743');
+      expect(payload['amount'], '15000');
+      expect(payload['term'], '91');
+      expect(payload['termType'], 'DAY');
       expect((authItems.first as Map<String, dynamic>)['routeKey'], 'public');
       expect((authItems.last as Map<String, dynamic>)['routeKey'], 'face');
       expect(payload['nextStepCode'], '');
@@ -345,33 +323,35 @@ void main() {
               'isolines': 'product-1',
               'disprovable': 'Funny Loan',
               'rejectee': 'order-1',
+              'unfindable': '15000',
+              'temerariousness': '91',
+              'lixiviates': 'DAY',
             },
             'oocytes': <dynamic>[],
             'tetragrammaton': <String, dynamic>{},
             'scabiosa': <String, dynamic>{},
           },
           orderRedirectResponseData: const <String, dynamic>{
-            'sidearms': 'http://example.com/order-redirect',
-            'outcrop': 1,
-            'reallot': '',
+            'rekeys': <String, dynamic>{
+              'sidearms': 'http://example.com/order-redirect',
+            },
+            'unplait': '0',
+            'gluteal': 'success',
           },
         );
         Get.put<ApiService>(apiService, permanent: true);
         await tester.pumpWidget(_buildTestApp());
-        String? launchedUrl;
 
-        await ApiNavigationHelper.fetchProductDetailByProductId(
-          'product-1',
-          urlLauncher: (uri) async {
-            launchedUrl = uri.toString();
-            return true;
-          },
-        );
+        await ApiNavigationHelper.fetchProductDetailByProductId('product-1');
+        await tester.pumpAndSettle();
 
         expect(apiService.fetchedOrderRedirectBody, <String, dynamic>{
-          'orderNo': 'order-1',
+          'nosh': 'order-1',
+          'unfindable': '15000',
+          'temerariousness': '91',
+          'lixiviates': 'DAY',
         });
-        expect(launchedUrl, 'http://example.com/order-redirect');
+        expect(find.text('Loading...'), findsOneWidget);
       },
     );
 
@@ -419,12 +399,20 @@ Widget _buildTestApp() {
         page: () => const Scaffold(body: Text('login page')),
       ),
       GetPage(
+        name: AppRoutes.setting,
+        page: () => const Scaffold(body: Text('setting page')),
+      ),
+      GetPage(
         name: AppRoutes.certificationPersonalInfo,
         page: () => const Scaffold(body: Text('personal page')),
       ),
       GetPage(
         name: AppRoutes.detail,
         page: () => const Scaffold(body: Text('detail page')),
+      ),
+      GetPage(
+        name: AppRoutes.webview,
+        page: () => const Scaffold(body: Text('Loading...')),
       ),
     ],
   );

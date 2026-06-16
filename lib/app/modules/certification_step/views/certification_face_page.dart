@@ -8,11 +8,11 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/native/native_bridge.dart';
 import '../../../core/permissions/app_permission_service.dart';
+import '../../../core/widgets/app_page_header.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../routes/api_navigation_helper.dart';
-import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 
@@ -65,7 +65,7 @@ class CertificationFacePage extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    _FaceHeader(title: pageArgs.displayTitle),
+                    AppPageHeader(title: pageArgs.displayTitle),
                     SizedBox(height: 16.h),
                     const CertificationUploadHintBanner(
                       scabiosaFieldKey: 'extricating',
@@ -286,51 +286,6 @@ class CertificationFacePage extends StatelessWidget {
       grayly: response.data['grayly'].intOrNull ?? 0,
       unwarned: response.data['unwarned'].stringValue,
       cithrens: response.data['cithrens'].stringValue,
-    );
-  }
-}
-
-class _FaceHeader extends StatelessWidget {
-  const _FaceHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 44.h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Align(
-            alignment: Alignment.center,
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: AppColors.certificationTextPrimary,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w500,
-                height: 24 / 20,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 11.w,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => NavigationHelper.back<void>(),
-              child: Image.asset(
-                'assets/icon_back.png',
-                width: 25.w,
-                height: 25.h,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

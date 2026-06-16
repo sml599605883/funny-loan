@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
-
 import '../core/json/json.dart';
 import '../core/permissions/app_permission_service.dart';
 import '../core/storage/app_data_store.dart';
@@ -26,11 +24,6 @@ typedef ApplyProductRequest =
 
 class ApiNavigationHelper {
   ApiNavigationHelper._();
-
-  static const targetTypeAppPage = 'appPage';
-  static const targetTypeWebUrl = 'webUrl';
-  static const targetTypeUnsupported = 'unsupported';
-  static const targetTypeNone = 'none';
 
   static Future<void> applyProductAndNavigate(
     String cohabiter, {
@@ -61,9 +54,8 @@ class ApiNavigationHelper {
     );
     final rawTarget = response.data['sidearms'].stringValue.trim();
     if (rawTarget.isNotEmpty) {
-      await _dispatchRawTarget(
+      await navigateRawTarget(
         rawTarget,
-        isNative: response.data['outcrop'].intValue == 0,
         detailArguments: detailArguments,
         urlLauncher: urlLauncher,
       );
@@ -78,6 +70,41 @@ class ApiNavigationHelper {
     final message = response.data['reallot'].stringValue.trim();
     if (message.isNotEmpty) {
       EasyLoading.showToast(message);
+    }
+  }
+
+  static Future<void> navigateRawTarget(
+    String rawTarget, {
+    Object? detailArguments,
+    Future<bool> Function(Uri uri)? urlLauncher,
+  }) async {
+    final target = _parseRawTarget(rawTarget);
+    if (target == null) {
+      return;
+    }
+    switch (target.type) {
+      case _NavigationTargetType.appPage:
+        if (target.appPage == NavigationTargetMapper.productDetail) {
+          final productId = _cohabiterFromTarget(target.rawTarget);
+          if (productId.isEmpty) {
+            return;
+          }
+          final productDetail = await _fetchProductDetailByProductId(productId);
+          await _handleProductDetailFlow(
+            productDetail,
+            urlLauncher: urlLauncher,
+          );
+          return;
+        }
+        NavigationHelper.toAppPage(target.appPage!, arguments: detailArguments);
+        return;
+      case _NavigationTargetType.webUrl:
+        if (urlLauncher != null) {
+          await urlLauncher.call(target.webUri!);
+          return;
+        }
+        NavigationHelper.toWebView(target.webUri!.toString());
+        return;
     }
   }
 
@@ -99,6 +126,9 @@ class ApiNavigationHelper {
       'productId': json['accretes']['isolines'].stringValue,
       'productName': json['accretes']['disprovable'].stringValue,
       'orderNo': json['accretes']['rejectee'].stringValue,
+      'amount': json['accretes']['unfindable'].stringValue,
+      'term': json['accretes']['temerariousness'].stringValue,
+      'termType': json['accretes']['lixiviates'].stringValue,
       'resultCode': json['gewurztraminers'].intValue,
       'message': json['reallot'].stringValue,
       'hasNextStep': nextStep.mapValue.isNotEmpty,
@@ -118,102 +148,6 @@ class ApiNavigationHelper {
     return cached ?? const <String, String>{};
   }
 
-  static Map<String, dynamic> resolveDecision(Json json) {
-    final rawTarget = json['sidearms'].stringValue.trim();
-    final isNative = json['outcrop'].intValue == 0;
-
-    if (rawTarget.isEmpty) {
-      return <String, dynamic>{
-        'type': targetTypeNone,
-        'rawTarget': '',
-        'normalizedAppPage': '',
-        'webUrl': null,
-        'isNative': isNative,
-      };
-    }
-
-    final appPage = NavigationTargetMapper.appPageFromTarget(rawTarget);
-    if (appPage != null && appPage.isNotEmpty) {
-      return <String, dynamic>{
-        'type': targetTypeAppPage,
-        'rawTarget': rawTarget,
-        'normalizedAppPage': appPage,
-        'webUrl': null,
-        'isNative': isNative,
-      };
-    }
-
-    final webUrl = _resolveWebUrl(rawTarget);
-    if (webUrl != null) {
-      return <String, dynamic>{
-        'type': targetTypeWebUrl,
-        'rawTarget': rawTarget,
-        'normalizedAppPage': '',
-        'webUrl': webUrl,
-        'isNative': isNative,
-      };
-    }
-
-    return <String, dynamic>{
-      'type': targetTypeUnsupported,
-      'rawTarget': rawTarget,
-      'normalizedAppPage': '',
-      'webUrl': null,
-      'isNative': isNative,
-    };
-  }
-
-  static Future<void> dispatchDecision(
-    Map<String, dynamic> decision, {
-    Object? detailArguments,
-    Future<bool> Function(Uri uri)? urlLauncher,
-  }) async {
-    switch (decision['type']) {
-      case targetTypeAppPage:
-        final normalizedAppPage =
-            decision['normalizedAppPage'] as String? ?? '';
-        if (normalizedAppPage == NavigationTargetMapper.productDetail) {
-          await _dispatchProductDetailDecision(
-            decision,
-            urlLauncher: urlLauncher,
-          );
-          return;
-        }
-        NavigationHelper.toAppPage(
-          normalizedAppPage,
-          arguments: detailArguments,
-        );
-        return;
-      case targetTypeWebUrl:
-        final uri = decision['webUrl'] as Uri?;
-        if (uri == null) {
-          return;
-        }
-        await (urlLauncher ?? _launchExternalUrl).call(uri);
-        return;
-      case targetTypeUnsupported:
-      case targetTypeNone:
-        return;
-      default:
-        return;
-    }
-  }
-
-  static Future<void> _dispatchProductDetailDecision(
-    Map<String, dynamic> decision, {
-    Future<bool> Function(Uri uri)? urlLauncher,
-  }) async {
-    final productId = _cohabiterFromTarget(
-      decision['rawTarget'] as String? ?? '',
-    );
-    if (productId.isEmpty) {
-      return;
-    }
-
-    final productDetail = await _fetchProductDetailByProductId(productId);
-    await _handleProductDetailFlow(productDetail, urlLauncher: urlLauncher);
-  }
-
   static Future<void> _handleProductDetailFlow(
     Map<String, dynamic> productDetail, {
     Future<bool> Function(Uri uri)? urlLauncher,
@@ -230,18 +164,17 @@ class ApiNavigationHelper {
       if (orderNo.isEmpty) {
         return;
       }
-      final redirect = await _fetchOrderRedirectByOrderNo(orderNo);
-      final rawTarget = (redirect['sidearms'] as String? ?? '').trim();
+      final redirect = await _fetchOrderRedirectByOrderNo(productDetail);
+      final rawTarget = Json(redirect['rekeys'])['sidearms'].stringValue.trim();
       if (rawTarget.isNotEmpty) {
-        await _dispatchRawTarget(
+        await navigateRawTarget(
           rawTarget,
-          isNative: redirect['outcrop'] == 0 || redirect['outcrop'] == '0',
           detailArguments: productDetail,
           urlLauncher: urlLauncher,
         );
         return;
       }
-      final message = (redirect['reallot'] as String? ?? '').trim();
+      final message = (redirect['gluteal'] as String? ?? '').trim();
       if (message.isNotEmpty) {
         EasyLoading.showToast(message);
       }
@@ -306,37 +239,39 @@ class ApiNavigationHelper {
   }
 
   static Future<Map<String, dynamic>> _fetchOrderRedirectByOrderNo(
-    String orderNo,
+    Map<String, dynamic> productDetail,
   ) async {
     final response = await _apiService.fetchOrderRedirect(<String, dynamic>{
-      'orderNo': orderNo,
+      'nosh': (productDetail['orderNo'] as String? ?? '').trim(),
+      'unfindable': (productDetail['amount'] as String? ?? '').trim(),
+      'temerariousness': (productDetail['term'] as String? ?? '').trim(),
+      'lixiviates': (productDetail['termType'] as String? ?? '').trim(),
     });
     return response.data.mapValue;
-  }
-
-  static Future<void> _dispatchRawTarget(
-    String rawTarget, {
-    required bool isNative,
-    Object? detailArguments,
-    Future<bool> Function(Uri uri)? urlLauncher,
-  }) {
-    final decision = resolveDecision(
-      Json(<String, dynamic>{
-        'sidearms': rawTarget,
-        'outcrop': isNative ? 0 : 1,
-        'gewurztraminers': 0,
-      }),
-    );
-    return dispatchDecision(
-      decision,
-      detailArguments: detailArguments,
-      urlLauncher: urlLauncher,
-    );
   }
 
   static String _cohabiterFromTarget(String rawTarget) {
     final uri = Uri.tryParse(rawTarget.trim());
     return uri?.queryParameters['cohabiter']?.trim() ?? '';
+  }
+
+  static _NavigationTarget? _parseRawTarget(String rawTarget) {
+    final target = rawTarget.trim();
+    if (target.isEmpty) {
+      return null;
+    }
+
+    final appPage = NavigationTargetMapper.appPageFromTarget(target);
+    if (appPage != null && appPage.isNotEmpty) {
+      return _NavigationTarget.appPage(target, appPage);
+    }
+
+    final webUri = _resolveWebUrl(target);
+    if (webUri != null) {
+      return _NavigationTarget.webUrl(target, webUri);
+    }
+
+    return null;
   }
 
   static Uri? _resolveWebUrl(String rawTarget) {
@@ -357,10 +292,6 @@ class ApiNavigationHelper {
       return Uri.tryParse('$baseUrl$target');
     }
     return null;
-  }
-
-  static Future<bool> _launchExternalUrl(Uri uri) {
-    return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   static String _tokenProvider() {
@@ -449,6 +380,36 @@ class ApiNavigationHelper {
 
   static MutableNetworkState get _networkState =>
       Get.find<MutableNetworkState>();
+}
+
+enum _NavigationTargetType { appPage, webUrl }
+
+class _NavigationTarget {
+  const _NavigationTarget._({
+    required this.type,
+    required this.rawTarget,
+    this.appPage,
+    this.webUri,
+  });
+
+  const _NavigationTarget.appPage(String rawTarget, String appPage)
+    : this._(
+        type: _NavigationTargetType.appPage,
+        rawTarget: rawTarget,
+        appPage: appPage,
+      );
+
+  const _NavigationTarget.webUrl(String rawTarget, Uri webUri)
+    : this._(
+        type: _NavigationTargetType.webUrl,
+        rawTarget: rawTarget,
+        webUri: webUri,
+      );
+
+  final _NavigationTargetType type;
+  final String rawTarget;
+  final String? appPage;
+  final Uri? webUri;
 }
 
 class _LocationFlowResult {

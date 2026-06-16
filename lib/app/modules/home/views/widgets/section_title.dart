@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../theme/screen_adapter.dart';
 
 class SectionTitle extends StatelessWidget {
-  const SectionTitle({super.key, required this.title});
+  const SectionTitle({
+    super.key,
+    required this.title,
+    this.titleColor = Colors.white,
+  });
 
   final String title;
+  final Color titleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +36,7 @@ class SectionTitle extends StatelessWidget {
               child: Text(
                 title,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: titleColor,
                   fontSize: 16.sp,
                   fontWeight: FontWeight.w700,
                 ),

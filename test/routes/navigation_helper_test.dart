@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:funny_loan/app/app.dart';
@@ -65,21 +65,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Face verification'), findsOneWidget);
-    expect(find.byKey(const Key('certification_face_demo_image')), findsOneWidget);
-  });
-
-  testWidgets('obfuscated personal route key can navigate to personal info page', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(const FunnyLoanApp());
-    await tester.pumpAndSettle();
-
-    NavigationHelper.toAppPage(
-      'Impersonality',
-      arguments: <String, dynamic>{'nextStepTitle': 'Personal information'},
+    expect(
+      find.byKey(const Key('certification_face_demo_image')),
+      findsOneWidget,
     );
-    await tester.pumpAndSettle();
-
-    expect(find.text('Personal information'), findsOneWidget);
   });
+
+  testWidgets(
+    'obfuscated personal route key can navigate to personal info page',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(const FunnyLoanApp());
+      await tester.pumpAndSettle();
+
+      NavigationHelper.toAppPage(
+        'Impersonality',
+        arguments: <String, dynamic>{'nextStepTitle': 'Personal information'},
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Personal information'), findsOneWidget);
+    },
+  );
 }

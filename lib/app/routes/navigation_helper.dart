@@ -34,6 +34,13 @@ class NavigationHelper {
     return Get.toNamed<T>(AppRoutes.setting);
   }
 
+  static Future<T?>? toWebView<T extends Object?>(String url) {
+    return Get.toNamed<T>(
+      AppRoutes.webview,
+      arguments: <String, dynamic>{'url': url.trim()},
+    );
+  }
+
   static Future<T?>? toOrderList<T extends Object?>({int initialTab = 0}) {
     return Get.toNamed<T>(
       AppRoutes.orderList,
@@ -110,6 +117,10 @@ class NavigationHelper {
         ..._normalizeCertificationPayloadArguments(arguments),
       },
     );
+  }
+
+  static Future<T?>? toCardList<T extends Object?>({Object? arguments}) {
+    return Get.toNamed<T>(AppRoutes.cardList, arguments: arguments);
   }
 
   static Future<T?>? toAppPage<T extends Object?>(

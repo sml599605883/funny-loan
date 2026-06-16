@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/widgets/app_page_header.dart';
 import '../../../core/json/json.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -68,7 +69,7 @@ class _CertificationStepPageState extends State<CertificationStepPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _CertificationHeader(title: pageArgs.displayTitle),
+          AppPageHeader(title: pageArgs.displayTitle),
           SizedBox(height: 16.h),
           if (hasOtherOptions) ...[
             _CertificationSegmentedControl(
@@ -339,54 +340,6 @@ class _IdentityOptionItem {
 
   final String title;
   final String value;
-}
-
-class _CertificationHeader extends StatelessWidget {
-  const _CertificationHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 46.h,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Center(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 0,
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => NavigationHelper.back<void>(),
-              child: Padding(
-                padding: ScreenAdapter.edgeInsetsOnly(
-                  left: 2,
-                  top: 6,
-                  right: 12,
-                  bottom: 6,
-                ),
-                child: Image.asset(
-                  'assets/icon_back.png',
-                  width: 25.w,
-                  height: 25.h,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class _CertificationSegmentedControl extends StatelessWidget {

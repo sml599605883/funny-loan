@@ -12,4 +12,6 @@ abstract class AppRoutes {
   static const certificationWorkInfo = '/certification-work-info';
   static const certificationContactInfo = '/certification-contact-info';
   static const certificationBindCard = '/certification-bind-card';
+  static const cardList = '/card-list';
+  static const webview = '/webview';
 }

@@ -157,6 +157,19 @@ class NetworkClient {
     return _responseParser.parse(response.data);
   }
 
+  Future<Map<String, dynamic>> buildQueryParameters(
+    String path, {
+    Map<String, dynamic> businessParams = const {},
+    RequestMethod method = RequestMethod.get,
+  }) async {
+    final request = await _buildRequestPayload(
+      path: path,
+      method: method,
+      businessParams: businessParams,
+    );
+    return request.queryParameters;
+  }
+
   Uri _buildUri(String path, Map<String, dynamic> queryParameters) {
     final normalizedPath = path.startsWith('/') ? path : '/$path';
     return Uri.parse('${_state.apiBaseUrl}$normalizedPath').replace(

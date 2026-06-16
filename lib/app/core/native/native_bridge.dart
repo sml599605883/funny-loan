@@ -114,4 +114,13 @@ abstract class NativeBridge {
       );
     }
   }
+
+  static Future<bool> requestAppReview() async {
+    try {
+      final result = await _channel.invokeMethod<bool>('requestAppReview');
+      return result ?? true;
+    } on PlatformException {
+      return false;
+    }
+  }
 }
