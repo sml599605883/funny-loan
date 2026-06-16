@@ -7,6 +7,19 @@ import 'navigation_target_mapper.dart';
 class NavigationHelper {
   NavigationHelper._();
 
+  static const Set<String> _certificationFlowPrunedRouteNames = <String>{
+    AppRoutes.certificationStep,
+    AppRoutes.certificationUpload,
+    AppRoutes.certificationUploadSuccess,
+    AppRoutes.certificationFace,
+    AppRoutes.certificationPersonalInfo,
+    AppRoutes.certificationWorkInfo,
+    AppRoutes.certificationContactInfo,
+    AppRoutes.certificationBindCard,
+    AppRoutes.cardList,
+    AppRoutes.webview,
+  };
+
   static void back<T extends Object?>({T? result}) {
     Get.back<T>(result: result);
   }
@@ -35,7 +48,7 @@ class NavigationHelper {
   }
 
   static Future<T?>? toWebView<T extends Object?>(String url) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.webview,
       arguments: <String, dynamic>{'url': url.trim()},
     );
@@ -52,7 +65,7 @@ class NavigationHelper {
     required String routeKey,
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationStep,
       arguments: <String, dynamic>{'routeKey': routeKey, 'payload': arguments},
     );
@@ -61,19 +74,25 @@ class NavigationHelper {
   static Future<T?>? toCertificationUpload<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(AppRoutes.certificationUpload, arguments: arguments);
+    return _toNamedAfterPruningCertificationFlow<T>(
+      AppRoutes.certificationUpload,
+      arguments: arguments,
+    );
   }
 
   static Future<T?>? toCertificationFace<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(AppRoutes.certificationFace, arguments: arguments);
+    return _toNamedAfterPruningCertificationFlow<T>(
+      AppRoutes.certificationFace,
+      arguments: arguments,
+    );
   }
 
   static Future<T?>? toCertificationUploadSuccess<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationUploadSuccess,
       arguments: arguments,
     );
@@ -82,7 +101,7 @@ class NavigationHelper {
   static Future<T?>? toCertificationPersonalInfo<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationPersonalInfo,
       arguments: _normalizeCertificationPayloadArguments(arguments),
     );
@@ -91,7 +110,7 @@ class NavigationHelper {
   static Future<T?>? toCertificationWorkInfo<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationWorkInfo,
       arguments: _normalizeCertificationPayloadArguments(arguments),
     );
@@ -100,7 +119,7 @@ class NavigationHelper {
   static Future<T?>? toCertificationContactInfo<T extends Object?>({
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationContactInfo,
       arguments: _normalizeCertificationPayloadArguments(arguments),
     );
@@ -110,7 +129,7 @@ class NavigationHelper {
     required String routeKey,
     Object? arguments,
   }) {
-    return Get.toNamed<T>(
+    return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationBindCard,
       arguments: <String, dynamic>{
         'routeKey': routeKey,
@@ -197,6 +216,18 @@ class NavigationHelper {
         }
         return null;
     }
+  }
+
+  static Future<T?>? _toNamedAfterPruningCertificationFlow<T extends Object?>(
+    String routeName, {
+    Object? arguments,
+  }) {
+    return Get.offNamedUntil<T>(
+      routeName,
+      (route) =>
+          !_certificationFlowPrunedRouteNames.contains(route.settings.name),
+      arguments: arguments,
+    );
   }
 
   static Map<String, dynamic> _normalizeCertificationPayloadArguments(
