@@ -50,3 +50,5 @@ app.*.map.json
 # Local generated docs and design data
 /data/
 /project_docs/
+/docs/
+/test/
