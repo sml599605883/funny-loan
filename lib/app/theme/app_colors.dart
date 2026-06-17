@@ -23,6 +23,12 @@ abstract class AppColors {
   static const mineTextPrimary = Color(0xFF333333);
   static const mineTextSecondary = Color(0xFF292929);
 
+  static const settingDialogBarrier = Color(0x8C000000);
+  static const settingDialogTitle = Color(0xFF280A02);
+  static const settingDialogBody = Color(0xFF5F5752);
+  static const settingDialogSecondaryAction = Color(0xFF908E8C);
+  static const settingDialogPrimaryAction = Color(0xFFF45834);
+
   static const orderSegmentDivider = Color(0xFFF0F0F0);
   static const orderSegmentText = Color(0xFFC6C6C6);
   static const orderStatusOverdue = Color(0xFFD05353);
