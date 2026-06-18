@@ -61,6 +61,13 @@ class NavigationHelper {
     );
   }
 
+  static Future<T?>? toMineOrderList<T extends Object?>({int initialTab = 0}) {
+    return Get.toNamed<T>(
+      AppRoutes.mineOrderList,
+      arguments: <String, dynamic>{'initialTab': initialTab},
+    );
+  }
+
   static Future<T?>? toCertificationStep<T extends Object?>({
     required String routeKey,
     Object? arguments,

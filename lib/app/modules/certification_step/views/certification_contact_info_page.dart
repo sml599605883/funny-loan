@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 
 import '../../../core/json/json.dart';
 import '../../../core/widgets/app_page_header.dart';
+import '../../../core/widgets/certification_retention_guard.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -83,7 +84,13 @@ class _CertificationContactInfoPageState
         bottom: false,
         child: Column(
           children: [
-            AppPageHeader(title: _displayTitle),
+            AppPageHeader(
+              title: _displayTitle,
+              onBack: CertificationRetentionGuard.backHandler(
+                type: '4',
+                productId: _pageArgs.productId,
+              ),
+            ),
             SizedBox(height: 16.h),
             const CertificationUploadHintBanner(
               scabiosaFieldKey: 'wolframite',

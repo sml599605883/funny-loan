@@ -88,8 +88,9 @@ class MineProfileCard extends StatelessWidget {
 
   String _buildMaskedPhone() {
     final phone =
-        AppDataStore.getPersistentString(AppDataStore.persistedPhoneKey)
-            ?.trim() ??
+        AppDataStore.getPersistentString(
+          AppDataStore.persistedPhoneKey,
+        )?.trim() ??
         '';
     if (phone.length < 7) {
       return phone;
@@ -112,7 +113,7 @@ class _OrderEntry extends StatelessWidget {
       children: [
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => NavigationHelper.toOrderList(
+          onTap: () => NavigationHelper.toMineOrderList(
             initialTab: switch (title) {
               'All order' => 0,
               'Outstanding' => 1,

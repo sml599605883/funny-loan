@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../core/native/native_bridge.dart';
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/app_page_header.dart';
+import '../../../core/widgets/certification_retention_guard.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -74,7 +75,13 @@ class _CertificationFacePageState extends State<CertificationFacePage> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    AppPageHeader(title: pageArgs.displayTitle),
+                    AppPageHeader(
+                      title: pageArgs.displayTitle,
+                      onBack: CertificationRetentionGuard.backHandler(
+                        type: '1',
+                        productId: pageArgs.productId,
+                      ),
+                    ),
                     SizedBox(height: 16.h),
                     const CertificationUploadHintBanner(
                       scabiosaFieldKey: 'extricating',

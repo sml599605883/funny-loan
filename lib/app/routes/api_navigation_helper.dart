@@ -169,14 +169,17 @@ class ApiNavigationHelper {
       if (orderNo.isEmpty) {
         return;
       }
+      final redirect = await _fetchOrderRedirectByOrderNo(productDetail);
       _reportRiskScene(
         sceneType: ReportRiskScene.orderConfirm,
         productId: (productDetail['productId'] as String? ?? '').trim(),
         orderNo: orderNo,
         startTime: _currentSecondsTimestamp(),
       );
-      final redirect = await _fetchOrderRedirectByOrderNo(productDetail);
-      final rawTarget = Json(redirect['rekeys'])['sidearms'].stringValue.trim();
+      final nestedTarget = redirect['rekeys']['sidearms'].stringValue.trim();
+      final rawTarget = nestedTarget.isNotEmpty
+          ? nestedTarget
+          : redirect['sidearms'].stringValue.trim();
       if (rawTarget.isNotEmpty) {
         await navigateRawTarget(
           rawTarget,
@@ -185,7 +188,7 @@ class ApiNavigationHelper {
         );
         return;
       }
-      final message = (redirect['gluteal'] as String? ?? '').trim();
+      final message = redirect['gluteal'].stringValue.trim();
       if (message.isNotEmpty) {
         EasyLoading.showToast(message);
       }
@@ -249,7 +252,7 @@ class ApiNavigationHelper {
     return fetchProductDetail(<String, dynamic>{'cohabiter': cohabiter});
   }
 
-  static Future<Map<String, dynamic>> _fetchOrderRedirectByOrderNo(
+  static Future<Json> _fetchOrderRedirectByOrderNo(
     Map<String, dynamic> productDetail,
   ) async {
     final response = await _apiService.fetchOrderRedirect(<String, dynamic>{
@@ -258,7 +261,7 @@ class ApiNavigationHelper {
       'temerariousness': (productDetail['term'] as String? ?? '').trim(),
       'lixiviates': (productDetail['termType'] as String? ?? '').trim(),
     });
-    return response.data.mapValue;
+    return response.data;
   }
 
   static String _cohabiterFromTarget(String rawTarget) {

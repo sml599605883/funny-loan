@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/web_page_opener.dart';
 import '../../../../routes/navigation_helper.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/screen_adapter.dart';
@@ -25,9 +26,11 @@ class MineServiceCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              const _ServiceTile(
+              _ServiceTile(
                 iconPath: 'assets/mine/service_online.png',
                 title: 'Online Services',
+                onTap: () =>
+                    WebPageOpener.openPath('/#/SuperhighwaySubscribes'),
               ),
               const _TileGap(),
               _ServiceTile(
@@ -36,9 +39,10 @@ class MineServiceCard extends StatelessWidget {
                 onTap: NavigationHelper.toSetting,
               ),
               const _TileGap(),
-              const _ServiceTile(
+              _ServiceTile(
                 iconPath: 'assets/mine/service_privacy.png',
                 title: 'Privacy Agreement',
+                onTap: () => WebPageOpener.openPath('/#/Portmanteaus'),
               ),
             ],
           ),
@@ -49,11 +53,7 @@ class MineServiceCard extends StatelessWidget {
 }
 
 class _ServiceTile extends StatelessWidget {
-  const _ServiceTile({
-    required this.iconPath,
-    required this.title,
-    this.onTap,
-  });
+  const _ServiceTile({required this.iconPath, required this.title, this.onTap});
 
   final String iconPath;
   final String title;

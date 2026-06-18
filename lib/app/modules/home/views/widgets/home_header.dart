@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/web_page_opener.dart';
 import '../../../../theme/screen_adapter.dart';
 
 class HomeHeader extends StatelessWidget {
@@ -18,10 +19,14 @@ class HomeHeader extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Image.asset(
-          'assets/home/home_avatar_badge.png',
-          width: 34.w,
-          height: 34.w,
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => WebPageOpener.openPath('/#/SuperhighwaySubscribes'),
+          child: Image.asset(
+            'assets/home/home_avatar_badge.png',
+            width: 34.w,
+            height: 34.w,
+          ),
         ),
       ],
     );

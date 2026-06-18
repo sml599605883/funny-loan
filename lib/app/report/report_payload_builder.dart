@@ -69,7 +69,7 @@ class ReportPayloadBuilder {
         'typescripts': identifiers.idfv,
         'overtired': identifiers.idfa,
         'rased': DateTime.now().millisecondsSinceEpoch,
-        'champaca': elapsed,
+        'champaca': '$elapsed',
         'cauline': await native.getProxyEnabled(),
         'hygrometers': await native.getVpnEnabled(),
         'nonrailroad': await native.getRooted(),
@@ -82,16 +82,16 @@ class ReportPayloadBuilder {
         'treasurers': uptime,
       },
       'cattaloes': <String, dynamic>{
-        'doohickey': 'Apple',
+        'bye': 'QC_Reference_Phone',
+        'unskillfulness': 'iPhone',
         'toyshop': await native.getCpuCores(),
         'calibrators': _screenHeight(),
         'copurifies': await native.getDeviceName(),
         'triglyphic': _screenWidth(),
         'madded': iosInfo?.modelName ?? androidInfo?.model ?? '',
+        'bechamel': await native.getScreenInches(),
         'smashingly':
             iosInfo?.systemVersion ?? androidInfo?.version.release ?? '',
-        'certify': packageInfo.version,
-        'porcelainlike': await native.getScreenInches(),
       },
       'polygraphist': <String, dynamic>{
         'waggeries': _text(wifiInfo['ip']),
@@ -107,8 +107,10 @@ class ReportPayloadBuilder {
 
   Map<String, dynamic> _wifiItem(Map<String, dynamic> wifiInfo) {
     return <String, dynamic>{
-      'misdescribing': _text(wifiInfo['ssid']),
+      'governmental': _text(wifiInfo['ssid']),
       'foodie': _text(wifiInfo['bssid']),
+      'cabins': _text(wifiInfo['bssid']),
+      'misdescribing': _text(wifiInfo['ssid']),
     };
   }
 

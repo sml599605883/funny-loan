@@ -5,6 +5,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/json/json.dart';
+import '../../../core/widgets/retention_popup.dart';
 import '../../../core/widgets/app_page_header.dart';
 import '../../../routes/navigation_helper.dart';
 import '../../../theme/app_colors.dart';
@@ -161,13 +162,34 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
 
   Future<void> _handleBackPressed() async {
     final controller = _controller;
-    if (controller != null && await controller.canGoBack()) {
-      await controller.goBack();
-      return;
+    final canGoBack = controller != null && await controller.canGoBack();
+    Future<void> defaultBack() async {
+      if (canGoBack) {
+        await controller.goBack();
+        return;
+      }
+      if (mounted) {
+        NavigationHelper.back<void>();
+      }
     }
-    if (mounted) {
-      NavigationHelper.back<void>();
+
+    final currentUrl =
+        (await controller?.getUrl())?.toString().trim() ??
+        widget.initialUrl.trim();
+    final productId = WebViewOperateRetention.productIdFromUrl(currentUrl);
+    if (productId.isNotEmpty) {
+      final shown = await RetentionPopup.show(
+        type: WebViewOperateRetention.type,
+        productId: productId,
+        onLeftTap: () {
+          unawaited(defaultBack());
+        },
+      );
+      if (shown) {
+        return;
+      }
     }
+    await defaultBack();
   }
 
   void _syncJsBridgeState() {
@@ -222,5 +244,36 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
       return;
     }
     setState(() => _title = title);
+  }
+}
+
+class WebViewOperateRetention {
+  WebViewOperateRetention._();
+
+  static const String type = '5';
+
+  static String productIdFromUrl(String rawUrl) {
+    final url = rawUrl.trim();
+    if (!url.contains('Operate')) {
+      return '';
+    }
+    final uri = Uri.tryParse(url);
+    final productId = _queryValue(uri, 'skoals');
+    if (productId.isNotEmpty) {
+      return productId;
+    }
+    final fragmentUri = Uri.tryParse(uri?.fragment ?? '');
+    final fragmentProductId = _queryValue(fragmentUri, 'skoals');
+    if (fragmentProductId.isNotEmpty) {
+      return fragmentProductId;
+    }
+    return RegExp(
+          r'(?:[?&#]|^)skoals=([^&#]+)',
+        ).firstMatch(url)?.group(1)?.trim() ??
+        '';
+  }
+
+  static String _queryValue(Uri? uri, String key) {
+    return uri?.queryParameters[key]?.trim() ?? '';
   }
 }

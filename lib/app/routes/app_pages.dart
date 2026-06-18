@@ -13,6 +13,7 @@ import '../modules/detail/views/detail_page.dart';
 import '../modules/login/controllers/login_controller.dart';
 import '../modules/login/views/login_page.dart';
 import '../modules/main_tab/views/main_tab_page.dart';
+import '../modules/order_list/views/mine_order_list_page.dart';
 import '../modules/order_list/views/order_list_page.dart';
 import '../modules/setting/views/setting_page.dart';
 import '../modules/webview/views/webview_page.dart';
@@ -43,6 +44,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.orderList,
       page: () => const OrderListPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.mineOrderList,
+      page: () => const MineOrderListPage(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

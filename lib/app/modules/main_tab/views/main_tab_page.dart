@@ -14,18 +14,16 @@ class MainTabPage extends GetView<MainTabController> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = <Widget>[
-      const HomePage(),
-      const OrderListPage(),
-      const MinePage(),
-    ];
-
     return Obx(
       () => Scaffold(
         backgroundColor: Colors.transparent,
         body: IndexedStack(
           index: controller.currentIndex.value,
-          children: pages,
+          children: <Widget>[
+            const HomePage(),
+            OrderListPage(isVisible: controller.currentIndex.value == 1),
+            const MinePage(),
+          ],
         ),
         bottomNavigationBar: ClipRRect(
           borderRadius: const BorderRadius.only(

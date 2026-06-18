@@ -36,6 +36,11 @@ abstract class AppColors {
   static const orderStatusSettled = Color(0xFF6FB26A);
   static const orderLabelText = Color(0xFFB0B0B0);
   static const orderDueLabelText = Color(0xFFCECECE);
+  static const mineOrderBackground = Color(0xFFF0F0F0);
+  static const mineOrderTabSelected = Color(0xFFFF8A2E);
+  static const mineOrderTabText = Color(0xFF999999);
+  static const mineOrderEmptyBlue = Color(0xFF246EF1);
+  static const mineOrderEmptyAccent = Color(0xFFE9F1FF);
 
   static const certificationTextPrimary = Color(0xFF281001);
   static const certificationBackSurface = Color(0xFFEDEAE5);

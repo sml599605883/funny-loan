@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../../core/json/json.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../core/widgets/app_page_header.dart';
+import '../../../core/widgets/certification_retention_guard.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../report/report_manager.dart';
@@ -77,7 +78,13 @@ class _CertificationPersonalInfoPageState
         bottom: false,
         child: Column(
           children: [
-            AppPageHeader(title: _pageArgs.displayTitle),
+            AppPageHeader(
+              title: _pageArgs.displayTitle,
+              onBack: CertificationRetentionGuard.backHandler(
+                type: '2',
+                productId: _pageArgs.productId,
+              ),
+            ),
             SizedBox(height: 16.h),
             const CertificationUploadHintBanner(
               scabiosaFieldKey: 'verves',

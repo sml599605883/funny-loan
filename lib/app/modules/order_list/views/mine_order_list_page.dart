@@ -1,27 +1,27 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:funny_loan/app/network/network.dart';
 import 'package:get/get.dart';
 
-import '../../../network/api/api_service.dart';
+import '../../../core/widgets/app_page_header.dart';
 import '../../../routes/api_navigation_helper.dart';
+import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 import '../models/order_list_data.dart';
 import '../utils/order_status_mapper.dart';
 import 'widgets/order_list_card.dart';
-import 'widgets/order_list_header.dart';
 import 'widgets/order_tab_bar.dart';
 
-class OrderListPage extends StatefulWidget {
-  const OrderListPage({super.key, this.isVisible = true});
-
-  final bool isVisible;
+class MineOrderListPage extends StatefulWidget {
+  const MineOrderListPage({super.key});
 
   @override
-  State<OrderListPage> createState() => _OrderListPageState();
+  State<MineOrderListPage> createState() => _MineOrderListPageState();
 }
 
-class _OrderListPageState extends State<OrderListPage> {
-  late int currentTabIndex;
+class _MineOrderListPageState extends State<MineOrderListPage> {
+  late int _currentTabIndex;
   late final EasyRefreshController _refreshController;
   final List<OrderListItem> _items = <OrderListItem>[];
   bool _isRefreshing = false;
@@ -37,51 +37,42 @@ class _OrderListPageState extends State<OrderListPage> {
     final initialTab = arguments is Map
         ? (arguments['initialTab'] as int? ?? 0)
         : 0;
-    currentTabIndex = initialTab.clamp(0, OrderTabBar.labels.length - 1);
+    _currentTabIndex = initialTab.clamp(0, OrderTabBar.labels.length - 1);
     _refreshController = EasyRefreshController(
       controlFinishRefresh: true,
       controlFinishLoad: true,
     );
-    if (widget.isVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _refreshOrders();
-      });
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant OrderListPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!oldWidget.isVisible && widget.isVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) {
-          return;
-        }
-        _refreshOrders();
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshOrders();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.mineOrderBackground,
       body: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: ScreenAdapter.edgeInsetsOnly(
-            left: 20,
-            top: 16,
-            right: 20,
-            bottom: 24,
-          ),
-          child: Column(
-            children: [
-              const OrderListHeader(),
-              SizedBox(height: 18.h),
-              OrderTabBar(currentIndex: currentTabIndex, onChanged: _changeTab),
-              SizedBox(height: 18.h),
-              Expanded(
+        child: Column(
+          children: [
+            SizedBox(height: 21.h),
+            const AppPageHeader(title: 'Loan List'),
+            SizedBox(height: 20.h),
+            Padding(
+              padding: ScreenAdapter.edgeInsetsOnly(left: 20, right: 20),
+              child: OrderTabBar(
+                currentIndex: _currentTabIndex,
+                onChanged: _changeTab,
+              ),
+            ),
+            SizedBox(height: 24.h),
+            Expanded(
+              child: Padding(
+                padding: ScreenAdapter.edgeInsetsOnly(
+                  left: 20,
+                  right: 20,
+                  bottom: 24,
+                ),
                 child: EasyRefresh(
                   controller: _refreshController,
                   header: const ClassicHeader(
@@ -110,8 +101,8 @@ class _OrderListPageState extends State<OrderListPage> {
                   child: _buildOrderList(),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -124,11 +115,11 @@ class _OrderListPageState extends State<OrderListPage> {
   }
 
   void _changeTab(int index) {
-    if (index == currentTabIndex) {
+    if (index == _currentTabIndex) {
       return;
     }
     setState(() {
-      currentTabIndex = index;
+      _currentTabIndex = index;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
@@ -146,11 +137,21 @@ class _OrderListPageState extends State<OrderListPage> {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          SizedBox(height: 120.h),
-          Center(
-            child: Text(
-              'No orders',
-              style: TextStyle(color: Colors.black54, fontSize: 14.sp),
+          SizedBox(height: 152.h),
+          Image.asset(
+            'assets/order/mine_order_empty.png',
+            width: 256.w,
+            height: 198.h,
+            fit: BoxFit.contain,
+          ),
+          SizedBox(height: 23.h),
+          Text(
+            'No information available',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16.sp,
+              height: 19 / 16,
             ),
           ),
         ],
@@ -206,9 +207,11 @@ class _OrderListPageState extends State<OrderListPage> {
           ..addAll(refreshedItems);
         _hasMore = refreshedItems.isNotEmpty;
       });
+      EasyLoading.dismiss();
       _refreshController.finishRefresh();
       _refreshController.resetFooter();
-    } catch (_) {
+    } catch (e) {
+      EasyLoading.showError(NetworkErrorMapper.map(e));
       _refreshController.finishRefresh(IndicatorResult.fail);
     } finally {
       if (mounted) {
@@ -238,10 +241,12 @@ class _OrderListPageState extends State<OrderListPage> {
         _items.addAll(moreItems);
         _hasMore = moreItems.isNotEmpty;
       });
+      EasyLoading.dismiss();
       _refreshController.finishLoad(
         _hasMore ? IndicatorResult.success : IndicatorResult.noMore,
       );
-    } catch (_) {
+    } catch (e) {
+      EasyLoading.showError(NetworkErrorMapper.map(e));
       _refreshController.finishLoad(IndicatorResult.fail);
     } finally {
       if (mounted) {
@@ -253,9 +258,10 @@ class _OrderListPageState extends State<OrderListPage> {
   }
 
   Future<List<OrderListItem>> _fetchOrders({required int page}) async {
+    EasyLoading.show();
     final response = await Get.find<ApiService>()
         .fetchOrderList(<String, dynamic>{
-          'sulphide': OrderStatusMapper.statusCodeForTab(currentTabIndex),
+          'sulphide': OrderStatusMapper.statusCodeForTab(_currentTabIndex),
           'carcase': '$page',
           'unawaked': '50',
         });
