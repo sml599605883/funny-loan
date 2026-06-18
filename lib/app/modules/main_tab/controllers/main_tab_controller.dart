@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 
 import '../../home/controllers/home_controller.dart';
+import '../../mine/controllers/mine_controller.dart';
 import '../../../core/storage/app_data_store.dart';
 import '../../../routes/app_routes.dart';
 import '../../../routes/navigation_helper.dart';
@@ -31,15 +32,19 @@ class MainTabController extends GetxController {
     currentIndex.value = index;
     if (index == 0 && previousIndex != 0) {
       _refreshHomeData();
+    } else if (index == 2 && previousIndex != 2) {
+      _refreshMinePopup();
     }
   }
 
   void onHomeRouteVisible() {
     _refreshHomeData();
+    _refreshMinePopup();
   }
 
   void onAppResumed() {
     _refreshHomeData();
+    _refreshMinePopup();
   }
 
   void _refreshHomeData() {
@@ -50,5 +55,15 @@ class MainTabController extends GetxController {
       return;
     }
     Get.find<HomeController>().fetchHomeData();
+  }
+
+  void _refreshMinePopup() {
+    if (currentIndex.value != 2 || Get.currentRoute != AppRoutes.home) {
+      return;
+    }
+    if (!Get.isRegistered<MineController>()) {
+      return;
+    }
+    Get.find<MineController>().fetchPopup();
   }
 }

@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 
 import '../modules/home/controllers/home_controller.dart';
 import '../modules/main_tab/controllers/main_tab_controller.dart';
+import '../modules/mine/controllers/mine_controller.dart';
 import '../network/api/api_service.dart';
 import '../network/core/common_params_builder.dart';
 import '../network/config/network_config.dart';
@@ -15,10 +16,14 @@ class InitialBinding extends Bindings {
     Get.put(MainTabController());
     Get.put(ReportManager(), permanent: true);
     final homeController = Get.put(HomeController());
-    _initNetwork(homeController);
+    final mineController = Get.put(MineController());
+    _initNetwork(homeController, mineController);
   }
 
-  void _initNetwork(HomeController homeController) {
+  void _initNetwork(
+    HomeController homeController,
+    MineController mineController,
+  ) {
     NetworkModule.create(
           NetworkConfig.funnyLoanIos(
             defaultApiBaseUrl: 'http://47.80.83.200/l-funny',
@@ -35,6 +40,7 @@ class InitialBinding extends Bindings {
           Get.put<ApiService>(networkModule.apiService, permanent: true);
           Get.put<MutableNetworkState>(networkModule.state, permanent: true);
           homeController.onNetworkReady(networkModule.apiService);
+          mineController.onNetworkReady(networkModule.apiService);
         })
         .catchError((Object error) {
           homeController.errorMessage.value = NetworkErrorMapper.map(error);

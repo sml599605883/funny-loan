@@ -4,9 +4,12 @@ import 'package:get/get.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
 import '../../../routes/api_navigation_helper.dart';
+import 'home_popup_coordinator.dart';
 import '../models/app_home_model.dart';
 
 class HomeController extends GetxController {
+  static const popupScene = 1;
+
   ApiService? _apiService;
   bool _isApplyingTopHeroProduct = false;
 
@@ -32,6 +35,7 @@ class HomeController extends GetxController {
       final data = response.data;
       EasyLoading.dismiss();
       homeResponse.value = AppHomeModel.fromJson(data);
+      await _fetchPopup(apiService);
     } catch (error) {
       final message = NetworkErrorMapper.map(error);
       EasyLoading.showError(message);
@@ -39,6 +43,12 @@ class HomeController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> _fetchPopup(ApiService apiService) async {
+    await HomePopupCoordinator(
+      apiService: apiService,
+    ).requestAndShow(scene: popupScene);
   }
 
   Future<void> applyTopHeroProduct(HomeCardModel card) async {
