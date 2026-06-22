@@ -12,6 +12,8 @@ class HomeController extends GetxController {
 
   ApiService? _apiService;
   bool _isApplyingTopHeroProduct = false;
+  bool _isHandlingBannerTap = false;
+  bool _isHandlingOrderStatusTap = false;
 
   final isLoading = false.obs;
   final homeResponse = Rxn<AppHomeModel>();
@@ -65,6 +67,49 @@ class HomeController extends GetxController {
       EasyLoading.showError(NetworkErrorMapper.map(error));
     } finally {
       _isApplyingTopHeroProduct = false;
+    }
+  }
+
+  Future<void> handleBannerTap(HomeBannerModel banner) async {
+    final linkUrl = banner.linkUrl.trim();
+    if (_isHandlingBannerTap || linkUrl.isEmpty) {
+      return;
+    }
+    _isHandlingBannerTap = true;
+    try {
+      final apiService = _apiService;
+      final bannerId = banner.id.trim();
+      if (apiService != null && bannerId.isNotEmpty) {
+        await apiService.uploadBannerClickRecord(<String, dynamic>{
+          'mislodges': bannerId,
+        });
+      }
+      await ApiNavigationHelper.navigateRawTarget(linkUrl);
+    } catch (error) {
+      EasyLoading.showError(NetworkErrorMapper.map(error));
+    } finally {
+      _isHandlingBannerTap = false;
+    }
+  }
+
+  Future<void> handleOrderStatusTap(HomeProcessModel process) async {
+    final linkUrl = process.linkUrl.trim();
+    if (_isHandlingOrderStatusTap || linkUrl.isEmpty) {
+      return;
+    }
+    _isHandlingOrderStatusTap = true;
+    try {
+      await ApiNavigationHelper.navigateRawTarget(
+        linkUrl,
+        detailArguments: <String, dynamic>{
+          'productId': process.productId,
+          'orderNo': process.orderNo,
+        },
+      );
+    } catch (error) {
+      EasyLoading.showError(NetworkErrorMapper.map(error));
+    } finally {
+      _isHandlingOrderStatusTap = false;
     }
   }
 }

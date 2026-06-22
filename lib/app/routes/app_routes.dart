@@ -14,5 +14,6 @@ abstract class AppRoutes {
   static const certificationContactInfo = '/certification-contact-info';
   static const certificationBindCard = '/certification-bind-card';
   static const cardList = '/card-list';
+  static const recredit = '/recredit';
   static const webview = '/webview';
 }

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:funny_loan/app/core/json/json.dart';
 import 'package:funny_loan/app/modules/home/controllers/home_controller.dart';
+import 'package:funny_loan/app/modules/home/models/app_home_model.dart';
 import 'package:funny_loan/app/modules/home/models/home_popup_data.dart';
 import 'package:funny_loan/app/modules/home/views/widgets/home_popup.dart';
 import 'package:funny_loan/app/network/api/api_service.dart';
@@ -15,10 +16,13 @@ import 'package:funny_loan/app/network/core/common_params_provider.dart';
 import 'package:funny_loan/app/network/core/response_parser.dart';
 import 'package:funny_loan/app/network/models/network_response.dart';
 import 'package:funny_loan/app/network/utils/crypto_util.dart';
+import 'package:funny_loan/app/routes/app_routes.dart';
 import 'package:funny_loan/app/theme/screen_adapter.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  tearDown(Get.reset);
 
   testWidgets('home refresh requests popup after home data refresh', (
     tester,
@@ -192,6 +196,98 @@ void main() {
     expect(find.byType(UpgradePopupContent), findsNothing);
     expect(find.byType(MarketingPopupContent), findsNothing);
   });
+
+  testWidgets('banner tap uploads click record and opens target', (
+    tester,
+  ) async {
+    Map<String, dynamic>? webViewArguments;
+    await tester.pumpWidget(
+      GetMaterialApp(
+        builder: (context, child) {
+          ScreenAdapter.init(context);
+          return EasyLoading.init()(context, child);
+        },
+        home: const SizedBox.shrink(),
+        getPages: <GetPage<dynamic>>[
+          GetPage(
+            name: AppRoutes.webview,
+            page: () {
+              final arguments = Get.arguments;
+              webViewArguments = arguments is Map
+                  ? Map<String, dynamic>.from(arguments)
+                  : const <String, dynamic>{};
+              return const Scaffold(body: Text('webview'));
+            },
+          ),
+        ],
+      ),
+    );
+    final apiService = _FakeApiService();
+    final controller = HomeController();
+    controller.onNetworkReady(apiService);
+    await tester.pump();
+
+    await controller.handleBannerTap(
+      const HomeBannerModel(
+        raw: <String, dynamic>{},
+        id: 'banner-2',
+        imageUrl: 'https://example.test/banner.png',
+        linkUrl: 'https://example.test/banner',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(apiService.uploadedBannerClickBody, <String, dynamic>{
+      'mislodges': 'banner-2',
+    });
+    expect(webViewArguments, <String, dynamic>{
+      'url': 'https://example.test/banner',
+    });
+  });
+
+  testWidgets('order status tap opens process target', (tester) async {
+    Map<String, dynamic>? webViewArguments;
+    Get.put<MutableNetworkState>(
+      MutableNetworkState(apiBaseUrl: '', webBaseUrl: 'https://web.test'),
+      permanent: true,
+    );
+    await tester.pumpWidget(
+      GetMaterialApp(
+        builder: (context, child) {
+          ScreenAdapter.init(context);
+          return EasyLoading.init()(context, child);
+        },
+        home: const SizedBox.shrink(),
+        getPages: <GetPage<dynamic>>[
+          GetPage(
+            name: AppRoutes.webview,
+            page: () {
+              final arguments = Get.arguments;
+              webViewArguments = arguments is Map
+                  ? Map<String, dynamic>.from(arguments)
+                  : const <String, dynamic>{};
+              return const Scaffold(body: Text('webview'));
+            },
+          ),
+        ],
+      ),
+    );
+    final controller = HomeController();
+
+    await controller.handleOrderStatusTap(
+      const HomeProcessModel(
+        raw: <String, dynamic>{},
+        productId: 'product-1',
+        orderNo: 'order-1',
+        linkUrl: 'https://example.test/status-target',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(webViewArguments, <String, dynamic>{
+      'url': 'https://example.test/status-target',
+    });
+  });
 }
 
 class _FakeApiService extends ApiService {
@@ -229,6 +325,7 @@ class _FakeApiService extends ApiService {
   final calls = <String>[];
   final Map<String, dynamic> popupResponseData;
   Map<String, dynamic>? popupParams;
+  Map<String, dynamic>? uploadedBannerClickBody;
 
   @override
   Future<NetworkResponse> fetchAppHome(Map<String, dynamic> params) async {
@@ -250,6 +347,19 @@ class _FakeApiService extends ApiService {
       message: 'success',
       data: Json(popupResponseData),
       raw: popupResponseData,
+    );
+  }
+
+  @override
+  Future<NetworkResponse> uploadBannerClickRecord(
+    Map<String, dynamic> body,
+  ) async {
+    uploadedBannerClickBody = Map<String, dynamic>.from(body);
+    return NetworkResponse(
+      code: 0,
+      message: 'success',
+      data: Json(<String, dynamic>{}),
+      raw: const <String, dynamic>{},
     );
   }
 }

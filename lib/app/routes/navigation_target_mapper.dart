@@ -101,7 +101,8 @@ class NavigationTargetMapper {
       return null;
     }
 
-    final queryPage = uri.queryParameters['appPage'] ?? uri.queryParameters['page'];
+    final queryPage =
+        uri.queryParameters['appPage'] ?? uri.queryParameters['page'];
     if (queryPage != null && queryPage.trim().isNotEmpty) {
       return normalizeAppPage(queryPage);
     }
@@ -133,6 +134,8 @@ class NavigationTargetMapper {
         return AppRoutes.orderList;
       case productDetail:
         return AppRoutes.detail;
+      case recredit:
+        return AppRoutes.recredit;
       default:
         return null;
     }

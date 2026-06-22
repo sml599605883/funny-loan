@@ -101,7 +101,13 @@ class ApiNavigationHelper {
           );
           return;
         }
-        NavigationHelper.toAppPage(target.appPage!, arguments: detailArguments);
+        NavigationHelper.toAppPage(
+          target.appPage!,
+          arguments: _mergeAppPageArguments(
+            detailArguments,
+            target.queryArguments,
+          ),
+        );
         return;
       case _NavigationTargetType.webUrl:
         if (urlLauncher != null) {
@@ -277,7 +283,12 @@ class ApiNavigationHelper {
 
     final appPage = NavigationTargetMapper.appPageFromTarget(target);
     if (appPage != null && appPage.isNotEmpty) {
-      return _NavigationTarget.appPage(target, appPage);
+      final uri = Uri.tryParse(target);
+      return _NavigationTarget.appPage(
+        target,
+        appPage,
+        queryArguments: uri?.queryParameters ?? const <String, String>{},
+      );
     }
 
     final webUri = _resolveWebUrl(target);
@@ -311,6 +322,19 @@ class ApiNavigationHelper {
   static String _tokenProvider() {
     return AppDataStore.getPersistentString(AppDataStore.persistedTokenKey) ??
         '';
+  }
+
+  static Object? _mergeAppPageArguments(
+    Object? detailArguments,
+    Map<String, String> queryArguments,
+  ) {
+    if (queryArguments.isEmpty) {
+      return detailArguments;
+    }
+    if (detailArguments is Map) {
+      return <String, dynamic>{...detailArguments, ...queryArguments};
+    }
+    return <String, dynamic>{...queryArguments};
   }
 
   static Future<void> _reportLocationAfterLoginCheck() async {
@@ -438,14 +462,19 @@ class _NavigationTarget {
     required this.rawTarget,
     this.appPage,
     this.webUri,
+    this.queryArguments = const <String, String>{},
   });
 
-  const _NavigationTarget.appPage(String rawTarget, String appPage)
-    : this._(
-        type: _NavigationTargetType.appPage,
-        rawTarget: rawTarget,
-        appPage: appPage,
-      );
+  const _NavigationTarget.appPage(
+    String rawTarget,
+    String appPage, {
+    Map<String, String> queryArguments = const <String, String>{},
+  }) : this._(
+         type: _NavigationTargetType.appPage,
+         rawTarget: rawTarget,
+         appPage: appPage,
+         queryArguments: queryArguments,
+       );
 
   const _NavigationTarget.webUrl(String rawTarget, Uri webUri)
     : this._(
@@ -458,6 +487,7 @@ class _NavigationTarget {
   final String rawTarget;
   final String? appPage;
   final Uri? webUri;
+  final Map<String, String> queryArguments;
 }
 
 class _LocationFlowResult {

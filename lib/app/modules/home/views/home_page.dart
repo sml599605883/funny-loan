@@ -35,11 +35,21 @@ class HomePage extends GetView<HomeController> {
       }
       if (bannerList.isNotEmpty) {
         children.add(SizedBox(height: 16.h));
-        children.add(BannerSection(bannerList: bannerList));
+        children.add(
+          BannerSection(
+            bannerList: bannerList,
+            onBannerTap: controller.handleBannerTap,
+          ),
+        );
       }
       if (processList.isNotEmpty) {
         children.add(SizedBox(height: 16.h));
-        children.add(OrderStatusSection(processList: processList));
+        children.add(
+          OrderStatusSection(
+            processList: processList,
+            onProcessTap: controller.handleOrderStatusTap,
+          ),
+        );
       }
       if (productList.isNotEmpty) {
         children.add(SizedBox(height: 16.h));

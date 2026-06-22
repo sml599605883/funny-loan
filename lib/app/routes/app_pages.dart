@@ -15,6 +15,8 @@ import '../modules/login/views/login_page.dart';
 import '../modules/main_tab/views/main_tab_page.dart';
 import '../modules/order_list/views/mine_order_list_page.dart';
 import '../modules/order_list/views/order_list_page.dart';
+import '../modules/recredit/controllers/recredit_polling_coordinator.dart';
+import '../modules/recredit/views/recredit_page.dart';
 import '../modules/setting/views/setting_page.dart';
 import '../modules/webview/views/webview_page.dart';
 import 'app_routes.dart';
@@ -104,6 +106,13 @@ class AppPages {
     GetPage(
       name: AppRoutes.cardList,
       page: () => const CardListPage(),
+      transition: Transition.rightToLeft,
+      popGesture: false,
+    ),
+    GetPage(
+      name: AppRoutes.recredit,
+      page: () => const RecreditPage(),
+      binding: RecreditPollingBinding(),
       transition: Transition.rightToLeft,
       popGesture: false,
     ),

@@ -76,4 +76,12 @@ abstract class AppColors {
   static const cardListBdoGold = Color(0xFFF4A72E);
   static const cardListGCashBlue = Color(0xFF1262F0);
   static const cardListMLRed = Color(0xFFDE1717);
+
+  static const recreditBackground = Color(0xFFFFFFFF);
+  static const recreditTextPrimary = Color(0xFF000000);
+  static const recreditHighlight = Color(0xFFFFBE1F);
+  static const recreditProgressTrack = Color(0xFFE6E6E6);
+  static const recreditProgressValue = Color(0xFFFF8A2E);
+  static const recreditProgressLabel = Color(0xFFFFC27F);
+  static const recreditButtonText = Color(0xFFFFFFFF);
 }

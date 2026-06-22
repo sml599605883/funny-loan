@@ -17,6 +17,7 @@ class NavigationHelper {
     AppRoutes.certificationContactInfo,
     AppRoutes.certificationBindCard,
     AppRoutes.cardList,
+    AppRoutes.recredit,
     AppRoutes.webview,
   };
 
@@ -169,6 +170,8 @@ class NavigationHelper {
         );
       case NavigationTargetMapper.productDetail:
         return toDetail<T>(arguments: arguments);
+      case NavigationTargetMapper.recredit:
+        return Get.toNamed<T>(AppRoutes.recredit, arguments: arguments);
       default:
         if (NavigationTargetMapper.normalizeProductDetailAuthItemCode(
               rawPage,
