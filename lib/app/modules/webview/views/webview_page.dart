@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -30,14 +32,53 @@ class FunnyLoanWebViewPage extends StatefulWidget {
 class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
     with WidgetsBindingObserver {
   static const String _bridgeHandlerName = 'ph_funny_loan_ios';
+  static const String _historyConsolePrefix = '[FunnyLoanWebViewHistory]';
+  static final UnmodifiableListView<UserScript> _debugHistoryScripts =
+      UnmodifiableListView<UserScript>(<UserScript>[
+        UserScript(
+          source:
+              '''
+(function() {
+  if (window.__funnyLoanHistoryProbeInstalled) {
+    return;
+  }
+  window.__funnyLoanHistoryProbeInstalled = true;
+  const log = function(type, args) {
+    try {
+      const target = args && args.length > 2 ? args[2] : null;
+      console.log('$_historyConsolePrefix ' + type + ' from=' + location.href + ' target=' + target);
+    } catch (error) {
+      console.log('$_historyConsolePrefix log-error ' + error);
+    }
+  };
+  const rawPushState = history.pushState;
+  const rawReplaceState = history.replaceState;
+  history.pushState = function() {
+    log('pushState', arguments);
+    return rawPushState.apply(this, arguments);
+  };
+  history.replaceState = function() {
+    log('replaceState', arguments);
+    return rawReplaceState.apply(this, arguments);
+  };
+  window.addEventListener('popstate', function() {
+    console.log('$_historyConsolePrefix popstate url=' + location.href);
+  });
+})();
+''',
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+        ),
+      ]);
 
   InAppWebViewController? _controller;
   late final WebViewBridgeDispatcher _dispatcher =
       widget._bridgeDispatcher ?? WebViewBridgeDispatcher();
   bool _appForeground = true;
+  bool _backInFlight = false;
   bool _bridgeEnabled = false;
   bool _isLoading = true;
   bool _routeActive = true;
+  int _backPressSerial = 0;
   String _title = '';
 
   @override
@@ -87,6 +128,9 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
                       initialUrlRequest: URLRequest(
                         url: WebUri.uri(Uri.parse(widget.initialUrl)),
                       ),
+                      initialUserScripts: kDebugMode
+                          ? _debugHistoryScripts
+                          : null,
                       initialSettings: InAppWebViewSettings(
                         allowsInlineMediaPlayback: true,
                         javaScriptEnabled: true,
@@ -98,28 +142,53 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
                       ),
                       onWebViewCreated: (controller) {
                         _controller = controller;
+                        _debugLog('created initialUrl=${widget.initialUrl}');
                         _syncJsBridgeState();
                       },
                       onLoadStart: (controller, url) {
+                        _debugLog('loadStart url=$url');
                         if (mounted) {
                           setState(() => _isLoading = true);
                         }
                       },
                       onLoadStop: (controller, url) async {
+                        _debugLog('loadStop url=$url');
+                        await _debugDumpWebHistory('loadStop');
                         await _syncTitleFromWebPage();
                         if (mounted) {
                           setState(() => _isLoading = false);
                         }
                       },
-                      onReceivedError: (controller, request, error) {},
-                      onReceivedHttpError: (controller, request, response) {},
-                      onConsoleMessage: (controller, consoleMessage) {},
+                      onReceivedError: (controller, request, error) {
+                        _debugLog(
+                          'receivedError url=${request.url} '
+                          'code=${error.type} description=${error.description}',
+                        );
+                      },
+                      onReceivedHttpError: (controller, request, response) {
+                        _debugLog(
+                          'receivedHttpError url=${request.url} '
+                          'status=${response.statusCode}',
+                        );
+                      },
+                      onConsoleMessage: (controller, consoleMessage) {
+                        final message = consoleMessage.message;
+                        if (message.contains(_historyConsolePrefix)) {
+                          _debugLog('console $message');
+                        }
+                      },
                       onTitleChanged: (controller, title) {
                         final normalized = title?.trim() ?? '';
                         if (!mounted || normalized.isEmpty) {
                           return;
                         }
                         setState(() => _title = normalized);
+                      },
+                      onUpdateVisitedHistory: (controller, url, isReload) {
+                        _debugLog(
+                          'updateVisitedHistory url=$url isReload=$isReload',
+                        );
+                        unawaited(_debugDumpWebHistory('visitedHistory'));
                       },
                       onReceivedServerTrustAuthRequest:
                           (controller, challenge) async {
@@ -130,6 +199,11 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
                       shouldOverrideUrlLoading:
                           (controller, navigationAction) async {
                             final uri = navigationAction.request.url;
+                            _debugLog(
+                              'shouldOverride url=$uri '
+                              'navType=${navigationAction.navigationType} '
+                              'isRedirect=${navigationAction.isRedirect}',
+                            );
                             if (uri == null) {
                               return NavigationActionPolicy.ALLOW;
                             }
@@ -143,6 +217,7 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
                               'about',
                             };
                             if (!allowedSchemes.contains(uri.scheme)) {
+                              _debugLog('externalScheme cancel url=$uri');
                               await launchUrl(uri);
                               return NavigationActionPolicy.CANCEL;
                             }
@@ -161,35 +236,66 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
   }
 
   Future<void> _handleBackPressed() async {
+    final serial = ++_backPressSerial;
+    if (_backInFlight) {
+      _debugLog('back#$serial entered while another back is in flight');
+    }
+    _backInFlight = true;
     final controller = _controller;
     final canGoBack = controller != null && await controller.canGoBack();
     Future<void> defaultBack() async {
       if (canGoBack) {
-        await controller.goBack();
+        await _goBackOneHistoryEntry(controller, serial);
+        await Future<void>.delayed(const Duration(milliseconds: 300));
         return;
       }
       if (mounted) {
+        _debugLog('back#$serial Flutter route back');
         NavigationHelper.back<void>();
       }
     }
 
-    final currentUrl =
-        (await controller?.getUrl())?.toString().trim() ??
-        widget.initialUrl.trim();
-    final productId = WebViewOperateRetention.productIdFromUrl(currentUrl);
-    if (productId.isNotEmpty) {
-      final shown = await RetentionPopup.show(
-        type: WebViewOperateRetention.type,
-        productId: productId,
-        onLeftTap: () {
-          unawaited(defaultBack());
-        },
-      );
-      if (shown) {
-        return;
+    try {
+      final currentUrl =
+          (await controller?.getUrl())?.toString().trim() ??
+          widget.initialUrl.trim();
+      _debugLog('back#$serial currentUrl=$currentUrl canGoBack=$canGoBack');
+      final productId = WebViewOperateRetention.productIdFromUrl(currentUrl);
+      if (productId.isNotEmpty) {
+        _debugLog('back#$serial retention productId=$productId');
+        final shown = await RetentionPopup.show(
+          type: WebViewOperateRetention.type,
+          productId: productId,
+          onLeftTap: () {
+            _debugLog('back#$serial retention left tap');
+            unawaited(defaultBack());
+          },
+        );
+        _debugLog('back#$serial retention shown=$shown');
+        if (shown) {
+          return;
+        }
       }
+      await defaultBack();
+    } finally {
+      _backInFlight = false;
     }
-    await defaultBack();
+  }
+
+  Future<void> _goBackOneHistoryEntry(
+    InAppWebViewController controller,
+    int serial,
+  ) async {
+    await _debugDumpWebHistory('back#$serial before goBack');
+    final history = await controller.getCopyBackForwardList();
+    if (WebViewBackHistory.shouldUsePageHistoryGo(history)) {
+      _debugLog('back#$serial page history.go(-1)');
+      await controller.evaluateJavascript(source: 'window.history.go(-1);');
+    } else {
+      _debugLog('back#$serial native goBack');
+      await controller.goBack();
+    }
+    await _debugDumpWebHistory('back#$serial after goBack');
   }
 
   void _syncJsBridgeState() {
@@ -245,6 +351,43 @@ class _FunnyLoanWebViewPageState extends State<FunnyLoanWebViewPage>
     }
     setState(() => _title = title);
   }
+
+  void _debugLog(String message) {
+    if (kDebugMode) {
+      debugPrint('[FunnyLoanWebView] $message');
+    }
+  }
+
+  Future<void> _debugDumpWebHistory(String stage) {
+    if (!kDebugMode) {
+      return Future<void>.value();
+    }
+    return _debugDumpWebHistoryInternal(stage);
+  }
+
+  Future<void> _debugDumpWebHistoryInternal(String stage) async {
+    final controller = _controller;
+    if (controller == null) {
+      _debugLog('$stage history controller=null');
+      return;
+    }
+    final url = await controller.getUrl();
+    final canGoBack = await controller.canGoBack();
+    final canGoForward = await controller.canGoForward();
+    final history = await controller.getCopyBackForwardList();
+    final items = history?.list ?? const <WebHistoryItem>[];
+    final historyText = items
+        .map((item) {
+          final marker = item.index == history?.currentIndex ? '*' : '';
+          return '$marker${item.index}:${item.url}';
+        })
+        .join(' <= ');
+    _debugLog(
+      '$stage history url=$url canGoBack=$canGoBack '
+      'canGoForward=$canGoForward currentIndex=${history?.currentIndex} '
+      'size=${items.length} stack=$historyText',
+    );
+  }
 }
 
 class WebViewOperateRetention {
@@ -275,5 +418,53 @@ class WebViewOperateRetention {
 
   static String _queryValue(Uri? uri, String key) {
     return uri?.queryParameters[key]?.trim() ?? '';
+  }
+}
+
+class WebViewBackHistory {
+  WebViewBackHistory._();
+
+  static bool shouldUsePageHistoryGo(WebHistory? history) {
+    final currentItem = _currentItem(history);
+    final previousItem = _previousItem(history);
+    if (currentItem == null || previousItem == null) {
+      return false;
+    }
+    final currentUri = Uri.tryParse(currentItem.url?.toString() ?? '');
+    final previousUri = Uri.tryParse(previousItem.url?.toString() ?? '');
+    if (currentUri == null || previousUri == null) {
+      return false;
+    }
+    return currentUri.fragment.isNotEmpty &&
+        previousUri.fragment.isNotEmpty &&
+        currentUri.removeFragment() == previousUri.removeFragment();
+  }
+
+  static WebHistoryItem? previousItem(WebHistory? history) {
+    return _previousItem(history);
+  }
+
+  static WebHistoryItem? _currentItem(WebHistory? history) {
+    final currentIndex = history?.currentIndex;
+    final items = history?.list;
+    if (currentIndex == null || items == null || currentIndex < 0) {
+      return null;
+    }
+    if (currentIndex >= items.length) {
+      return null;
+    }
+    return items[currentIndex];
+  }
+
+  static WebHistoryItem? _previousItem(WebHistory? history) {
+    final currentIndex = history?.currentIndex;
+    final items = history?.list;
+    if (currentIndex == null || items == null || currentIndex <= 0) {
+      return null;
+    }
+    if (currentIndex >= items.length) {
+      return null;
+    }
+    return items[currentIndex - 1];
   }
 }

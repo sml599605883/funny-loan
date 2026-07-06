@@ -1,5 +1,4 @@
 import '../../../core/json/json.dart';
-import '../views/widgets/order_list_card.dart';
 
 class OrderListData {
   const OrderListData({
@@ -46,7 +45,7 @@ class OrderListItem {
     required this.productId,
     required this.productName,
     required this.productLogo,
-    required this.status,
+    required this.statusCode,
     required this.statusText,
     required this.amountText,
     required this.amountLabel,
@@ -62,7 +61,7 @@ class OrderListItem {
   final String productId;
   final String productName;
   final String productLogo;
-  final OrderStatusType status;
+  final String statusCode;
   final String statusText;
   final String amountText;
   final String amountLabel;
@@ -79,7 +78,7 @@ class OrderListItem {
       productId: json['skoals'].stringValue.trim(),
       productName: json['disprovable'].stringValue.trim(),
       productLogo: json['subsider'].stringValue.trim(),
-      status: _statusFromCode(json['qwertys'].intValue),
+      statusCode: json['qwertys'].stringValue.trim(),
       statusText: json['sugar'].stringValue.trim(),
       amountText: json['unfindable'].stringValue.trim(),
       amountLabel: json['marchionesses'].stringValue.trim(),
@@ -89,17 +88,5 @@ class OrderListItem {
       dateText: json['hiccuped'].stringValue.trim(),
       overdueDays: json['bidi'].intValue,
     );
-  }
-
-  static OrderStatusType _statusFromCode(int code) {
-    switch (code) {
-      case 5:
-        return OrderStatusType.settled;
-      case 6:
-        return OrderStatusType.overdue;
-      case 7:
-      default:
-        return OrderStatusType.outstanding;
-    }
   }
 }

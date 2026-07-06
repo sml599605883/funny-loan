@@ -164,8 +164,9 @@ class _MineOrderListPageState extends State<MineOrderListPage> {
       itemBuilder: (context, index) {
         final item = _items[index];
         return OrderListCard(
-          status: item.status,
+          statusCode: item.statusCode,
           appName: item.productName,
+          productLogo: item.productLogo,
           statusText: item.statusText,
           amountLabel: item.amountLabel,
           amountText: item.amountText,

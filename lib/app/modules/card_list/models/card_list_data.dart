@@ -61,7 +61,7 @@ class CardListCell {
 
   factory CardListCell.fromJson(Json json) {
     return CardListCell(
-      type: json['triaged'].intValue,
+      type: json['triaged'].stringValue,
       account: json['surly'].stringValue.trim(),
       isSelected: json['mondos'].intValue == 1,
       logoUrl: json['euchromatic'].stringValue.trim(),
@@ -72,7 +72,7 @@ class CardListCell {
     );
   }
 
-  final int type;
+  final String type;
   final String account;
   final bool isSelected;
   final String logoUrl;

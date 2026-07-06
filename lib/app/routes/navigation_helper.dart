@@ -136,13 +136,21 @@ class NavigationHelper {
   static Future<T?>? toCertificationBindCard<T extends Object?>({
     required String routeKey,
     Object? arguments,
+    bool pruneHistory = true,
   }) {
+    final routeArguments = <String, dynamic>{
+      'routeKey': routeKey,
+      ..._normalizeCertificationPayloadArguments(arguments),
+    };
+    if (!pruneHistory) {
+      return Get.toNamed<T>(
+        AppRoutes.certificationBindCard,
+        arguments: routeArguments,
+      );
+    }
     return _toNamedAfterPruningCertificationFlow<T>(
       AppRoutes.certificationBindCard,
-      arguments: <String, dynamic>{
-        'routeKey': routeKey,
-        ..._normalizeCertificationPayloadArguments(arguments),
-      },
+      arguments: routeArguments,
     );
   }
 

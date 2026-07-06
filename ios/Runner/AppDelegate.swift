@@ -15,13 +15,16 @@ import TDMobRisk
 import UserNotifications
 
 @main
-@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, CLLocationManagerDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, CLLocationManagerDelegate, FlutterStreamHandler {
   private let nativeBridgeChannelName = "funny_loan/native_bridge"
+  private let nativeEventsChannelName = "funny_loan/native_events"
   private let trustDecisionPartnerCode = "boqin_ph"
   private let trustDecisionPartnerKey = "1dc25522f2adc77f5347816c0f7fa31b"
   private lazy var trustDecisionManager = TDMobRiskManager.sharedManager()
   private var hasConfiguredTrustDecision = false
   private var flutterChannel: FlutterMethodChannel?
+  private var eventSink: FlutterEventSink?
+  private var pendingPushRoutes: [String] = []
   private var locationManager: CLLocationManager?
   private var locationResults: [FlutterResult] = []
   private var requestingLocation = false
@@ -33,6 +36,7 @@ import UserNotifications
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    UNUserNotificationCenter.current().delegate = self
     if let registrar = self.registrar(forPlugin: nativeBridgeChannelName) {
       let channel = FlutterMethodChannel(
         name: nativeBridgeChannelName,
@@ -123,6 +127,11 @@ import UserNotifications
           result(FlutterMethodNotImplemented)
         }
       }
+      let eventChannel = FlutterEventChannel(
+        name: nativeEventsChannelName,
+        binaryMessenger: registrar.messenger()
+      )
+      eventChannel.setStreamHandler(self)
     }
     DispatchQueue.main.async { [weak self] in
         self?.configureTrustDecisionIfNeeded()
@@ -132,6 +141,17 @@ import UserNotifications
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+  }
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    eventSink = events
+    flushPendingPushRoutesIfNeeded()
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    eventSink = nil
+    return nil
   }
 
   private func systemProxySettings() -> [String: Any]? {
@@ -315,6 +335,80 @@ import UserNotifications
     UNUserNotificationCenter.current().delegate = self
     DispatchQueue.main.async {
       UIApplication.shared.registerForRemoteNotifications()
+    }
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+  ) {
+    let userInfo = notification.request.content.userInfo
+    guard let url = extractPushUrl(from: userInfo) else {
+      completionHandler([.banner, .badge, .sound])
+      return
+    }
+    sendPushRouteToFlutter(url)
+    completionHandler([])
+  }
+
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    defer { completionHandler() }
+    let userInfo = response.notification.request.content.userInfo
+    guard let url = extractPushUrl(from: userInfo) else {
+      return
+    }
+    sendPushRouteToFlutter(url)
+  }
+
+  private func extractPushUrl(from userInfo: [AnyHashable: Any]) -> String? {
+    if let url = normalizedPushUrl(userInfo["url"]) {
+      return url
+    }
+
+    if let params = userInfo["params"] as? [AnyHashable: Any],
+       let url = normalizedPushUrl(params["url"]) {
+      return url
+    }
+
+    if let paramsText = userInfo["params"] as? String,
+       let data = paramsText.data(using: .utf8),
+       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+       let url = normalizedPushUrl(json["url"]) {
+      return url
+    }
+
+    return nil
+  }
+
+  private func normalizedPushUrl(_ rawValue: Any?) -> String? {
+    guard let value = rawValue as? String else {
+      return nil
+    }
+    let url = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return url.isEmpty ? nil : url
+  }
+
+  private func sendPushRouteToFlutter(_ url: String) {
+    if let eventSink {
+      eventSink(["type": "push_route", "url": url])
+      return
+    }
+    pendingPushRoutes.append(url)
+  }
+
+  private func flushPendingPushRoutesIfNeeded() {
+    guard let eventSink, !pendingPushRoutes.isEmpty else {
+      return
+    }
+    let routes = pendingPushRoutes
+    pendingPushRoutes.removeAll()
+    for route in routes {
+      eventSink(["type": "push_route", "url": route])
     }
   }
 

@@ -15,24 +15,24 @@ abstract class NetworkErrorMapper {
         return 'Request cancelled';
       }
       if (error.type == DioExceptionType.connectionTimeout) {
-        return 'Connection timeout';
+        return 'Connection timeout. Please retry.';
       }
       if (error.type == DioExceptionType.sendTimeout) {
-        return 'Request timeout';
+        return 'Connection timeout. Please retry.';
       }
       if (error.type == DioExceptionType.receiveTimeout) {
-        return 'Response timeout';
+        return 'Connection timeout. Please retry.';
       }
       if (error.type == DioExceptionType.connectionError) {
-        return 'Network connection failed';
+        return 'Network error. Please try again.';
       }
       if (error.type == DioExceptionType.badCertificate) {
-        return 'Certificate validation failed';
+        return 'Network error. Please try again.';
       }
       if (error.type == DioExceptionType.badResponse) {
-        return 'Server response error';
+        return 'Network error. Please try again.';
       }
-      return error.message ?? 'Request failed';
+      return error.message ?? 'Network error. Please try again.';
     }
     return error.toString();
   }

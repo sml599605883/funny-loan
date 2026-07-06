@@ -21,6 +21,8 @@ class HomePage extends GetView<HomeController> {
       final productList = homeData?.productList ?? const <HomeProductModel>[];
       final processList = homeData?.processList ?? const <HomeProcessModel>[];
       final bannerList = homeData?.bannerList ?? const <HomeBannerModel>[];
+      final largeCardProgressList =
+          homeData?.largeCard?.progressList ?? const <HomeProgressStepModel>[];
 
       final children = <Widget>[const HomeHeader()];
 
@@ -48,16 +50,22 @@ class HomePage extends GetView<HomeController> {
           OrderStatusSection(
             processList: processList,
             onProcessTap: controller.handleOrderStatusTap,
+            onButtonTap: controller.handleOrderStatusButtonTap,
           ),
         );
       }
       if (productList.isNotEmpty) {
         children.add(SizedBox(height: 16.h));
-        children.add(RecommendationSection(productList: productList));
+        children.add(
+          RecommendationSection(
+            productList: productList,
+            onProductTap: controller.handleRecommendationTap,
+          ),
+        );
       }
       if (processList.isEmpty && productList.isEmpty) {
         children.add(SizedBox(height: 16.h));
-        children.add(const LoanProcessSection());
+        children.add(LoanProcessSection(progressList: largeCardProgressList));
       }
 
       return Scaffold(

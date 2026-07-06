@@ -1,3 +1,4 @@
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:funny_loan/app/network/errors/network_error_mapper.dart';
 
 import '../../core/native/native_bridge.dart';
@@ -178,9 +179,24 @@ class WebViewBridgeDispatcher {
       case WebViewBridgeAction.retryOrder:
         final orderNo = request.data['rejectee'].stringValue.trim();
         if (orderNo.isNotEmpty && Get.isRegistered<ApiService>()) {
-          await Get.find<ApiService>().fetchOrderRedirect(<String, dynamic>{
-            'nosh': orderNo,
-          });
+          EasyLoading.show();
+          try {
+            final response = await Get.find<ApiService>().retryCardConfirmOrder(
+              <String, dynamic>{'rejectee': orderNo},
+            );
+            EasyLoading.dismiss();
+            final redirectUrl = response.data['copybooks'].stringValue.trim();
+            if (redirectUrl.isNotEmpty) {
+              await _openUrl(redirectUrl);
+            }
+          } catch (error) {
+            final message = NetworkErrorMapper.map(error);
+            EasyLoading.showError(message);
+            return WebViewBridgeDispatchResult(
+              success: false,
+              errorMessage: message,
+            );
+          }
         }
         return const WebViewBridgeDispatchResult(success: true);
       case WebViewBridgeAction.changeAccount:
@@ -284,6 +300,7 @@ class WebViewBridgeDispatcher {
   ) async {
     NavigationHelper.toCertificationBindCard(
       routeKey: 'bank',
+      pruneHistory: false,
       arguments: <String, dynamic>{'payload': arguments},
     );
   }

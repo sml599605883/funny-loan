@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:funny_loan/app/core/utils/web_page_opener.dart';
 
-import '../../../../routes/navigation_helper.dart';
 import '../../../../theme/screen_adapter.dart';
 
 class OrderListHeader extends StatelessWidget {
@@ -47,7 +47,7 @@ class OrderListHeader extends StatelessWidget {
         const Spacer(),
         GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => NavigationHelper.toDetail(arguments: 'Customer Service'),
+          onTap: () => WebPageOpener.openPath('/#/SuperhighwaySubscribes'),
           child: Image.asset(
             'assets/home/home_avatar_badge.png',
             width: 34.w,

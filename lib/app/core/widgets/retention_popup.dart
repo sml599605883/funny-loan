@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:funny_loan/app/theme/screen_adapter.dart';
 import 'package:get/get.dart';
 
 import '../../network/api/api_service.dart';
@@ -26,10 +27,13 @@ class RetentionPopup {
 
     final response = await (apiService ?? Get.find<ApiService>())
         .fetchRetentionPopup(<String, dynamic>{
-          'avidly': normalizedType,
-          'cohabiter': normalizedProductId,
+          'dominances': normalizedType,
+          'skoals': normalizedProductId,
         });
-    final imageUrl = response.data['blessedness'].stringValue.trim();
+    final dialog = response.data['fidelismo'];
+    final imageUrl = dialog['blessedness'].stringValue.trim().isNotEmpty
+        ? dialog['blessedness'].stringValue.trim()
+        : dialog['sidearms'].stringValue.trim();
     if (imageUrl.isEmpty) {
       return false;
     }
@@ -87,6 +91,9 @@ class RetentionPopupContent extends StatelessWidget {
             _RetentionPopupButton(
               key: RetentionPopup.leftButtonKey,
               rect: _buttonRect(_leftButton, scale),
+              label: 'Exit',
+              backgroundColor: Colors.white,
+              textColor: Colors.black,
               onTap: () {
                 Get.back<void>();
                 onLeftTap();
@@ -95,6 +102,9 @@ class RetentionPopupContent extends StatelessWidget {
             _RetentionPopupButton(
               key: RetentionPopup.rightButtonKey,
               rect: _buttonRect(_rightButton, scale),
+              label: 'Continue',
+              backgroundColor: const Color(0xFF3A57B0),
+              textColor: Colors.white,
               onTap: Get.back<void>,
             ),
           ],
@@ -117,10 +127,16 @@ class _RetentionPopupButton extends StatelessWidget {
   const _RetentionPopupButton({
     super.key,
     required this.rect,
+    required this.label,
+    required this.backgroundColor,
+    required this.textColor,
     required this.onTap,
   });
 
   final Rect rect;
+  final String label;
+  final Color backgroundColor;
+  final Color textColor;
   final VoidCallback onTap;
 
   @override
@@ -133,7 +149,21 @@ class _RetentionPopupButton extends StatelessWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        child: const SizedBox.expand(),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            borderRadius: BorderRadius.circular(40.r),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 18.sp,
+              color: textColor,
+              fontWeight: .bold,
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -13,13 +13,11 @@ class AddressSelectionSheet extends StatefulWidget {
     super.key,
     required this.title,
     required this.options,
-    required this.currentValue,
     this.onSelected,
   });
 
   final String title;
   final List<AddressOption> options;
-  final String currentValue;
   final ValueChanged<AddressSelection>? onSelected;
 
   @override
@@ -34,53 +32,6 @@ class _AddressSelectionSheetState extends State<AddressSelectionSheet> {
   int _selectedDistrictIndex = 0;
   _AddressLevel _activeLevel = _AddressLevel.region;
   _AddressLevel _maxReachedLevel = _AddressLevel.region;
-
-  @override
-  void initState() {
-    super.initState();
-    _syncInitialSelection();
-  }
-
-  void _syncInitialSelection() {
-    final parts = widget.currentValue
-        .split('-')
-        .map((item) => item.trim())
-        .where((item) => item.isNotEmpty)
-        .toList();
-    if (parts.isEmpty || widget.options.isEmpty) {
-      return;
-    }
-    final provinceIndex = widget.options.indexWhere(
-      (option) => option.label == parts.first,
-    );
-    if (provinceIndex < 0) {
-      return;
-    }
-    _selectedProvinceIndex = provinceIndex;
-    final cities = widget.options[provinceIndex].children;
-    if (parts.length < 2 || cities.isEmpty) {
-      return;
-    }
-    final cityIndex = cities.indexWhere((option) => option.label == parts[1]);
-    if (cityIndex < 0) {
-      return;
-    }
-    _selectedCityIndex = cityIndex;
-    final districts = cities[cityIndex].children;
-    if (parts.length < 3 || districts.isEmpty) {
-      _maxReachedLevel = _AddressLevel.province;
-      return;
-    }
-    final districtIndex = districts.indexWhere(
-      (option) => option.label == parts[2],
-    );
-    if (districtIndex >= 0) {
-      _selectedDistrictIndex = districtIndex;
-      _maxReachedLevel = _AddressLevel.municipality;
-      return;
-    }
-    _maxReachedLevel = _AddressLevel.province;
-  }
 
   void _handleLevelTap(int index) {
     switch (_activeLevel) {

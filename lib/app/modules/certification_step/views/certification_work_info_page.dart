@@ -406,7 +406,6 @@ class _CertificationWorkInfoPageState extends State<CertificationWorkInfoPage> {
           return AddressSelectionSheet(
             title: field.label,
             options: addressOptions,
-            currentValue: field.controller.text.trim(),
           );
         },
       );

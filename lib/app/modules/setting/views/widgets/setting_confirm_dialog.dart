@@ -17,27 +17,31 @@ class SettingConfirmDialog extends StatelessWidget {
 
   final SettingDialogType type;
   final VoidCallback onConfirm;
-
+  /*
+"标题：Wait, before you go…
+内容：Outstanding balances must be repaid first. All data and pre-approved limits will be lost, and you'll reapply from scratch.
+按钮：Delete  | Keep My Account"
+*/
   String get _title => switch (type) {
-    SettingDialogType.logout => 'Leaving Already?',
-    SettingDialogType.deleteAccount => 'Delete Your Account?',
+    SettingDialogType.logout => 'Ready to sign out?',
+    SettingDialogType.deleteAccount => 'Wait, before you go…',
   };
 
   String get _message => switch (type) {
     SettingDialogType.logout =>
-      'Log in anytime to continue your application and check new loan offers.',
+      'Your session and any active loan offers will be saved. Sign in again anytime to continue.',
     SettingDialogType.deleteAccount =>
-      'You\'ll need to verify again next time, and current benefits may not be available.',
+      'Outstanding balances must be repaid first. All data and pre-approved limits will be lost, and you\'ll reapply from scratch.',
   };
 
   String get _leftAction => switch (type) {
-    SettingDialogType.logout => 'Log Out',
-    SettingDialogType.deleteAccount => 'Delete Account',
+    SettingDialogType.logout => 'Sign Out',
+    SettingDialogType.deleteAccount => 'Delete',
   };
 
   String get _rightAction => switch (type) {
-    SettingDialogType.logout => 'Stay',
-    SettingDialogType.deleteAccount => 'Stay',
+    SettingDialogType.logout => 'Keep Me Logged In',
+    SettingDialogType.deleteAccount => 'Keep My Account',
   };
 
   @override
@@ -77,7 +81,6 @@ class SettingConfirmDialog extends StatelessWidget {
                   ),
                   SizedBox(height: 20.w),
                   Container(
-                    height: 60.h,
                     padding: EdgeInsets.symmetric(horizontal: 30.w),
                     child: Text(
                       _message,
@@ -89,9 +92,10 @@ class SettingConfirmDialog extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(height: 36.w),
+                  Spacer(),
                   Container(
                     height: 48.h,
+                    margin: EdgeInsets.only(bottom: 17.h),
                     padding: EdgeInsets.only(left: 18.w, right: 18.w),
                     child: Row(
                       children: [

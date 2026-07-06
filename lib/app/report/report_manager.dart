@@ -250,12 +250,12 @@ class ReportManager {
     final location = await fetchNativeLocationInfo();
     final isLocationNotDetermined = await native
         .isLocationPermissionNotDetermined();
-    if (!isLocationNotDetermined) {
-      unawaited(
-        _runNonBlocking('device info after location', reportDeviceInfo),
-      );
-    }
     if (location == null) {
+      if (!isLocationNotDetermined) {
+        unawaited(
+          _runNonBlocking('device info after location', reportDeviceInfo),
+        );
+      }
       return;
     }
     unawaited(_runNonBlocking('device info after location', reportDeviceInfo));
@@ -472,9 +472,7 @@ class ReportManager {
 
   Future<void> _reportPushToken(String rawToken) async {
     final token = _text(rawToken);
-    if (token.isEmpty ||
-        token == cache.lastApplePushToken ||
-        token == _reportingPushToken) {
+    if (token.isEmpty || token == _reportingPushToken) {
       return;
     }
     _reportingPushToken = token;

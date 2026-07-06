@@ -12,9 +12,8 @@ class BindCardInfo {
     required this.bottomHintText,
   });
 
-  factory BindCardInfo.fromJson(Object? raw) {
-    final json = Json(raw);
-    final groups = json['rekeys']['tingling'].listValue
+  factory BindCardInfo.fromJson(Json json) {
+    final groups = json['tingling'].listValue
         .map((item) => BindCardGroupData.fromJson(item))
         .where((group) => group.fields.isNotEmpty)
         .toList();

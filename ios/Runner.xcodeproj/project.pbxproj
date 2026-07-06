@@ -345,7 +345,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin\n\nNATIVE_ASSET_FRAMEWORK=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/objective_c.framework\"\nif [ \"$CODE_SIGNING_ALLOWED\" != \"NO\" ] && [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ] && [ -d \"$NATIVE_ASSET_FRAMEWORK\" ]; then\n  /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" \"$NATIVE_ASSET_FRAMEWORK\"\nfi";
+			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" embed_and_thin\n\nNATIVE_ASSET_FRAMEWORK=\"$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH/objective_c.framework\"\nNATIVE_ASSET_BINARY=\"$NATIVE_ASSET_FRAMEWORK/objective_c\"\nif [ \"$SDK_NAME\" != \"iphonesimulator\" ] && [ -f \"$NATIVE_ASSET_BINARY\" ]; then\n  NATIVE_ASSET_ARCHS=\"$(/usr/bin/lipo -info \"$NATIVE_ASSET_BINARY\")\"\n  case \"$NATIVE_ASSET_ARCHS\" in\n    *arm64*) ;;\n    *)\n      echo \"error: objective_c.framework must contain arm64 for iOS device builds. Found: $NATIVE_ASSET_ARCHS\" >&2\n      exit 1\n      ;;\n  esac\nfi\nif [ \"$CODE_SIGNING_ALLOWED\" != \"NO\" ] && [ -n \"$EXPANDED_CODE_SIGN_IDENTITY\" ] && [ -d \"$NATIVE_ASSET_FRAMEWORK\" ]; then\n  /usr/bin/codesign --force --sign \"$EXPANDED_CODE_SIGN_IDENTITY\" \"$NATIVE_ASSET_FRAMEWORK\"\nfi";
 		};
 		9740EEB61CF901F6004384FC /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -507,7 +507,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bq.julyTwo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_25net;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_27y;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -700,7 +700,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bq.julyTwo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_25net;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_27y;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -733,7 +733,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.bq.julyTwo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_25net;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = bq2Dev_27y;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

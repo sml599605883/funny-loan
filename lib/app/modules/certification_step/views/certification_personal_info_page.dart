@@ -327,7 +327,6 @@ class _CertificationPersonalInfoPageState
           return AddressSelectionSheet(
             title: field.label,
             options: addressOptions,
-            currentValue: field.controller.text.trim(),
           );
         },
       );

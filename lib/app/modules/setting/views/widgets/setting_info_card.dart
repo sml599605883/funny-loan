@@ -38,11 +38,20 @@ class SettingInfoCard extends StatelessWidget {
           left: 0,
           right: 0,
           child: Center(
-            child: Image.asset(
-              'assets/setting/setting_logo.png',
-              width: 80.w,
-              height: 80.h,
-              fit: BoxFit.contain,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50.r),
+                border: Border.all(color: Colors.white, width: 2.w),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(50.r),
+                child: Image.asset(
+                  'assets/logo.png',
+                  width: 80.w,
+                  height: 80.h,
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
           ),
         ),
@@ -52,7 +61,7 @@ class SettingInfoCard extends StatelessWidget {
             children: [
               SizedBox(height: 88.h),
               Text(
-                'App Name',
+                'Funny Loan',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 20.sp,

@@ -295,6 +295,11 @@ class ApiService {
     );
   }
 
+  /// 用户&订单相关-原卡重试确认订单 POST /consultancy/kwacha
+  Future<NetworkResponse> retryCardConfirmOrder(Map<String, dynamic> body) {
+    return _client.post('/consultancy/kwacha', body: body);
+  }
+
   /// 用户&订单相关-订单列表 POST /consultancy/scumbag
   Future<NetworkResponse> fetchOrderList(Map<String, dynamic> body) {
     return _client.post('/consultancy/scumbag', body: body);

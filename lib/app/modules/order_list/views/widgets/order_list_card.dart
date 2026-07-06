@@ -3,13 +3,12 @@ import 'package:flutter/material.dart';
 import '../../../../theme/app_colors.dart';
 import '../../../../theme/screen_adapter.dart';
 
-enum OrderStatusType { overdue, outstanding, settled }
-
 class OrderListCard extends StatelessWidget {
   const OrderListCard({
     super.key,
-    required this.status,
+    required this.statusCode,
     this.appName = 'App Name',
+    this.productLogo = '',
     this.statusText = '',
     this.amountLabel = 'Loan Amount',
     this.amountText = '₱ 20,000',
@@ -19,8 +18,9 @@ class OrderListCard extends StatelessWidget {
     this.onTap,
   });
 
-  final OrderStatusType status;
+  final String statusCode;
   final String appName;
+  final String productLogo;
   final String statusText;
   final String amountLabel;
   final String amountText;
@@ -31,25 +31,8 @@ class OrderListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final badgeColor = switch (status) {
-      OrderStatusType.overdue => AppColors.orderStatusOverdue,
-      OrderStatusType.outstanding => AppColors.orderStatusOutstanding,
-      OrderStatusType.settled => AppColors.orderStatusSettled,
-    };
-    final headerGradient = switch (status) {
-      OrderStatusType.overdue => const [Color(0xFFFFE7E7), Color(0xFFFFC4C4)],
-      OrderStatusType.outstanding => const [
-        Color(0xFFFFF4D6),
-        Color(0xFFFFD89B),
-      ],
-      OrderStatusType.settled => const [Color(0xFFF8FAFF), Color(0xFFDDE8FF)],
-    };
-    final badgeText = switch (status) {
-      OrderStatusType.overdue => 'Overdue',
-      OrderStatusType.outstanding => 'Outstanding',
-      OrderStatusType.settled => 'Settled',
-    };
-    final displayedBadgeText = statusText.isNotEmpty ? statusText : badgeText;
+    final style = _OrderCardStyle.fromStatusCode(statusCode);
+    final displayedBadgeText = statusText;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -75,7 +58,7 @@ class OrderListCard extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: headerGradient,
+                  colors: style.headerGradient,
                 ),
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20.r),
@@ -84,12 +67,7 @@ class OrderListCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Image.asset(
-                    'assets/home/home_status_icon_identity.png',
-                    width: 20.w,
-                    height: 20.h,
-                    fit: BoxFit.contain,
-                  ),
+                  _buildProductLogo(),
                   SizedBox(width: 10.w),
                   Expanded(
                     child: Text(
@@ -113,7 +91,7 @@ class OrderListCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.right,
                       style: TextStyle(
-                        color: badgeColor,
+                        color: style.accentColor,
                         fontSize: 12.sp,
                         height: 14 / 12,
                       ),
@@ -171,7 +149,7 @@ class OrderListCard extends StatelessWidget {
                           Text(
                             dueDateText,
                             style: TextStyle(
-                              color: badgeColor,
+                              color: style.accentColor,
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w700,
                               height: 20 / 14,
@@ -188,7 +166,7 @@ class OrderListCard extends StatelessWidget {
                           bottom: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: badgeColor,
+                          color: style.accentColor,
                           borderRadius: BorderRadius.circular(100.r),
                         ),
                         child: Text(
@@ -209,6 +187,60 @@ class OrderListCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildProductLogo() {
+    final logoUrl = productLogo.trim();
+    if (logoUrl.isNotEmpty) {
+      return Image.network(
+        logoUrl,
+        width: 20.w,
+        height: 20.h,
+        fit: BoxFit.contain,
+        errorBuilder: (context, error, stackTrace) => _buildFallbackLogo(),
+      );
+    }
+    return _buildFallbackLogo();
+  }
+
+  Widget _buildFallbackLogo() {
+    return Image.asset(
+      'assets/home/home_status_icon_identity.png',
+      width: 20.w,
+      height: 20.h,
+      fit: BoxFit.contain,
+    );
+  }
+}
+
+class _OrderCardStyle {
+  const _OrderCardStyle({
+    required this.accentColor,
+    required this.headerGradient,
+  });
+
+  final Color accentColor;
+  final List<Color> headerGradient;
+
+  static const _redStatusCodes = <String>{'180', '174'};
+
+  factory _OrderCardStyle.fromStatusCode(String statusCode) {
+    if (_redStatusCodes.contains(statusCode.trim())) {
+      return const _OrderCardStyle(
+        accentColor: AppColors.orderStatusRed,
+        headerGradient: <Color>[
+          AppColors.orderHeaderRedTop,
+          AppColors.orderHeaderRedBottom,
+        ],
+      );
+    }
+    return const _OrderCardStyle(
+      accentColor: AppColors.orderStatusDefault,
+      headerGradient: <Color>[
+        AppColors.orderHeaderDefaultTop,
+        AppColors.orderHeaderDefaultBottom,
+      ],
     );
   }
 }

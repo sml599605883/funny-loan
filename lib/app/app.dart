@@ -22,8 +22,6 @@ class FunnyLoanApp extends StatefulWidget {
 
 class _FunnyLoanAppState extends State<FunnyLoanApp>
     with WidgetsBindingObserver {
-  bool _ignoreNextResumeHomeRefresh = false;
-
   @override
   void initState() {
     super.initState();
@@ -46,20 +44,12 @@ class _FunnyLoanAppState extends State<FunnyLoanApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if ((state == AppLifecycleState.inactive ||
-            state == AppLifecycleState.paused ||
-            state == AppLifecycleState.hidden) &&
-        _reportManager?.isRequestingForegroundPermission == true) {
-      _ignoreNextResumeHomeRefresh = true;
-    }
     if (state == AppLifecycleState.resumed) {
       final reportManager = _reportManager;
       if (reportManager != null) {
         unawaited(reportManager.onAppResumed());
       }
-      if (_ignoreNextResumeHomeRefresh) {
-        _ignoreNextResumeHomeRefresh = false;
-      } else if (Get.isRegistered<MainTabController>()) {
+      if (Get.isRegistered<MainTabController>()) {
         Get.find<MainTabController>().onAppResumed();
       }
     }

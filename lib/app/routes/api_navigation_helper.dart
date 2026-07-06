@@ -41,8 +41,6 @@ class ApiNavigationHelper {
       return;
     }
 
-    await _reportLocationAfterLoginCheck();
-
     final locationFlowResult = await _ensureLocationReady(
       locationServiceEnabledProvider: _locationServiceEnabledProvider,
       requestLocationPermission: AppPermissionService.requestLocationWhenInUse,
@@ -53,6 +51,8 @@ class ApiNavigationHelper {
     if (!locationFlowResult.shouldContinue) {
       return;
     }
+
+    await _reportLocationAfterLoginCheck();
 
     final response = await _apiService.applyProduct(
       _buildApplyProductBody(cohabiter: cohabiter, allantoins: allantoins),

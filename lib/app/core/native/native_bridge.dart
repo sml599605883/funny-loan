@@ -42,11 +42,15 @@ abstract class NativeBridge {
   static const MethodChannel _channel = MethodChannel(
     'funny_loan/native_bridge',
   );
+  static const EventChannel _eventChannel = EventChannel(
+    'funny_loan/native_events',
+  );
   static final StreamController<String> _pushTokenController =
       StreamController<String>.broadcast();
   static final StreamController<String> _trackingAuthorizationController =
       StreamController<String>.broadcast();
   static bool _methodHandlerBound = false;
+  static Stream<Json>? _nativeEventStream;
 
   static Stream<String> get pushTokenChanges {
     _bindNativeEventHandlers();
@@ -56,6 +60,14 @@ abstract class NativeBridge {
   static Stream<String> get trackingAuthorizationChanges {
     _bindNativeEventHandlers();
     return _trackingAuthorizationController.stream;
+  }
+
+  static Stream<Json> nativeEvents() {
+    _nativeEventStream ??= _eventChannel
+        .receiveBroadcastStream()
+        .map((event) => Json(event))
+        .handleError((_) {});
+    return _nativeEventStream!;
   }
 
   static void _bindNativeEventHandlers() {

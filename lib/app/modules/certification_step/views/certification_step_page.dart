@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../../core/widgets/app_page_header.dart';
+import '../../../core/widgets/certification_retention_guard.dart';
 import '../../../core/json/json.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -45,10 +46,7 @@ class _CertificationStepPageState extends State<CertificationStepPage> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: SafeArea(
-          bottom: false,
-          child: _buildSelectPage(pageArgs),
-        ),
+        body: SafeArea(bottom: false, child: _buildSelectPage(pageArgs)),
       ),
     );
   }
@@ -69,7 +67,13 @@ class _CertificationStepPageState extends State<CertificationStepPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AppPageHeader(title: pageArgs.displayTitle),
+          AppPageHeader(
+            title: pageArgs.displayTitle,
+            onBack: CertificationRetentionGuard.backHandler(
+              type: '0',
+              productId: pageArgs.productId,
+            ),
+          ),
           SizedBox(height: 16.h),
           if (hasOtherOptions) ...[
             _CertificationSegmentedControl(
@@ -175,7 +179,9 @@ class _CertificationStepPageState extends State<CertificationStepPage> {
     );
   }
 
-  Future<void> _initializeIdentityOptions(_CertificationStepArgs pageArgs) async {
+  Future<void> _initializeIdentityOptions(
+    _CertificationStepArgs pageArgs,
+  ) async {
     final payloadJson = Json(pageArgs.payload);
     final productId = payloadJson['productId'].stringValue.trim();
     if (productId.isEmpty || !Get.isRegistered<ApiService>()) {
@@ -316,6 +322,13 @@ class _CertificationStepArgs {
   final String routeKey;
   final String title;
   final Object? payload;
+
+  String get productId {
+    final payloadMap = payload is Map
+        ? payload as Map
+        : const <String, dynamic>{};
+    return (payloadMap['productId'] as String? ?? '').trim();
+  }
 
   String get displayTitle {
     if (title.isNotEmpty) {

@@ -34,6 +34,12 @@ abstract class AppColors {
   static const orderStatusOverdue = Color(0xFFD05353);
   static const orderStatusOutstanding = Color(0xFFF4A621);
   static const orderStatusSettled = Color(0xFF6FB26A);
+  static const orderStatusRed = Color(0xFFD05353);
+  static const orderStatusDefault = Color(0xFF3A57B0);
+  static const orderHeaderRedTop = Color(0xFFFFFFFF);
+  static const orderHeaderRedBottom = Color(0xFFFFC4C4);
+  static const orderHeaderDefaultTop = Color(0xFFCADFFD);
+  static const orderHeaderDefaultBottom = Color(0xFFECF4FF);
   static const orderLabelText = Color(0xFFB0B0B0);
   static const orderDueLabelText = Color(0xFFCECECE);
   static const mineOrderBackground = Color(0xFFF0F0F0);
@@ -41,6 +47,27 @@ abstract class AppColors {
   static const mineOrderTabText = Color(0xFF999999);
   static const mineOrderEmptyBlue = Color(0xFF246EF1);
   static const mineOrderEmptyAccent = Color(0xFFE9F1FF);
+
+  static const homePrimary = Color(0xFF3A57B0);
+  static const homeAccent = Color(0xFFFF8A2E);
+  static const homeProcessTrack = Color(0xFFC3D8F7);
+  static const homeProcessSurface = Color(0xFFFFFFFF);
+  static const homeProcessAmount = Color(0xFF000000);
+  static const homeProcessLabel = Color(0xFFB0B0B0);
+  static const homeProcessLocked = Color(0xFFE7EEF9);
+  static const homeProcessLockedText = Color(0xFF8FA4CE);
+  static const homeOrderStatusBlueBorder = Color(0xFFDEEBFE);
+  static const homeOrderStatusBlueHeaderStart = Color(0xFFFFFFFF);
+  static const homeOrderStatusBlueHeaderEnd = Color(0xFFCADFFD);
+  static const homeOrderStatusBlueTitle = Color(0xFF3A57B0);
+  static const homeOrderStatusBlueDescription = Color(0xFF9CAEE4);
+  static const homeOrderStatusRedBorder = Color(0xFFFAABAB);
+  static const homeOrderStatusRedHeaderStart = Color(0xFFFFFFFF);
+  static const homeOrderStatusRedHeaderEnd = Color(0xFFFFC4C4);
+  static const homeOrderStatusRedTitle = Color(0xFFD05353);
+  static const homeOrderStatusRedDescription = Color(0xFFE87C7C);
+  static const homeOrderStatusRedDividerLight = Color(0xFFFFEEEE);
+  static const homeOrderStatusButtonOrange = Color(0xFFFEA064);
 
   static const certificationTextPrimary = Color(0xFF281001);
   static const certificationBackSurface = Color(0xFFEDEAE5);

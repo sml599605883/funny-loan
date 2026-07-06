@@ -262,7 +262,7 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
       final response = await _apiService.fetchBindCardInfo(<String, dynamic>{
         'cohabiter': productId,
       });
-      final bindCardInfo = BindCardInfo.fromJson(response.raw);
+      final bindCardInfo = BindCardInfo.fromJson(response.data);
       if (!mounted) {
         bindCardInfo.dispose();
         return;

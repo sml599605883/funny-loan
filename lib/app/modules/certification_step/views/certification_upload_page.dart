@@ -12,7 +12,6 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../core/permissions/app_permission_service.dart';
 import '../../../core/widgets/app_page_header.dart';
-import '../../../core/widgets/certification_retention_guard.dart';
 import '../../../core/widgets/certification_upload_hint_banner.dart';
 import '../../../network/api/api_service.dart';
 import '../../../network/errors/network_error_mapper.dart';
@@ -195,13 +194,7 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
                   children: [
-                    AppPageHeader(
-                      title: 'Identity verification',
-                      onBack: CertificationRetentionGuard.backHandler(
-                        type: '0',
-                        productId: _productId(),
-                      ),
-                    ),
+                    const AppPageHeader(title: 'Identity verification'),
                     SizedBox(height: 16.h),
                     const CertificationUploadHintBanner(
                       scabiosaFieldKey: 'beveling',

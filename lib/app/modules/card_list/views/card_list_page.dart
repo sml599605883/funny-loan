@@ -55,10 +55,10 @@ class _CardListPageState extends State<CardListPage> {
                       for (final cell in section.cells) ...[
                         _PaymentMethodCard(
                           item: cell,
-                          isSelected: _selectedCellId == cell.account,
+                          isSelected: _selectedCellId == cell.type,
                           onTap: () {
                             setState(() {
-                              _selectedCellId = cell.account;
+                              _selectedCellId = cell.type;
                             });
                           },
                         ),
@@ -82,6 +82,7 @@ class _CardListPageState extends State<CardListPage> {
   void _openAddPaymentMethod() {
     NavigationHelper.toCertificationBindCard(
       routeKey: 'bank',
+      pruneHistory: false,
       arguments: <String, dynamic>{
         'payload': <String, dynamic>{
           'productId': _pageArgs.productId,
@@ -125,7 +126,7 @@ class _CardListPageState extends State<CardListPage> {
   CardListCell? get _selectedCell {
     for (final section in _cardListData.sections) {
       for (final cell in section.cells) {
-        if (cell.account == _selectedCellId) {
+        if (cell.type == _selectedCellId) {
           return cell;
         }
       }
@@ -137,7 +138,7 @@ class _CardListPageState extends State<CardListPage> {
     for (final section in _cardListData.sections) {
       for (final cell in section.cells) {
         if (cell.isSelected) {
-          return cell.account;
+          return cell.type;
         }
       }
     }

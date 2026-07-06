@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../theme/app_colors.dart';
 import '../../../../theme/screen_adapter.dart';
 import '../../models/app_home_model.dart';
 
@@ -11,6 +12,9 @@ class TopHeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final creditMetrics = _displayCreditList(card.creditList);
+    final hasCreditMetrics = creditMetrics.isNotEmpty;
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -71,33 +75,41 @@ class TopHeroSection extends StatelessWidget {
                 Container(
                   height: 60.h,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFC3D8F7),
+                    color: AppColors.homeProcessTrack,
                     borderRadius: BorderRadius.circular(30.r),
                   ),
                   padding: ScreenAdapter.edgeInsetsSymmetric(
-                    horizontal: 15,
+                    horizontal: hasCreditMetrics ? 32 : 15,
                     vertical: 12,
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _MetricTile(
-                          icon: 'assets/home/home_status_icon_profile.png',
-                          value: card.termInfo,
-                          label: card.termInfoDesc,
+                  child: hasCreditMetrics
+                      ? _CreditMetricRow(metrics: creditMetrics)
+                      : Row(
+                          children: [
+                            Expanded(
+                              child: _MetricTile(
+                                icon:
+                                    'assets/home/home_status_icon_profile.png',
+                                value: card.termInfo,
+                                label: card.termInfoDesc,
+                              ),
+                            ),
+                            Container(
+                              width: 2.w,
+                              height: 35.h,
+                              color: Colors.white,
+                            ),
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: _MetricTile(
+                                icon:
+                                    'assets/home/home_status_icon_identity.png',
+                                value: card.rateInfo,
+                                label: card.rateInfoDesc,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                      Container(width: 2.w, height: 35.h, color: Colors.white),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: _MetricTile(
-                          icon: 'assets/home/home_status_icon_identity.png',
-                          value: card.rateInfo,
-                          label: card.rateInfoDesc,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 SizedBox(height: 16.h),
                 SizedBox(
@@ -155,6 +167,15 @@ class TopHeroSection extends StatelessWidget {
       ),
     );
   }
+
+  List<HomeCreditStepModel> _displayCreditList(
+    List<HomeCreditStepModel> creditList,
+  ) {
+    if (creditList.length <= 2) {
+      return creditList;
+    }
+    return <HomeCreditStepModel>[creditList.first, creditList.last];
+  }
 }
 
 class _MetricTile extends StatelessWidget {
@@ -205,6 +226,95 @@ class _MetricTile extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CreditMetricRow extends StatelessWidget {
+  const _CreditMetricRow({required this.metrics});
+
+  final List<HomeCreditStepModel> metrics;
+
+  @override
+  Widget build(BuildContext context) {
+    if (metrics.length == 1) {
+      return Center(child: _CreditMetricTile(metric: metrics.first));
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _CreditMetricTile(metric: metrics.first, fixedWidth: true),
+        Container(
+          width: 2.w,
+          height: 35.h,
+          margin: ScreenAdapter.edgeInsetsSymmetric(horizontal: 27),
+          color: Colors.white,
+        ),
+        _CreditMetricTile(metric: metrics.last, fixedWidth: true),
+      ],
+    );
+  }
+}
+
+class _CreditMetricTile extends StatelessWidget {
+  const _CreditMetricTile({required this.metric, this.fixedWidth = false});
+
+  final HomeCreditStepModel metric;
+  final bool fixedWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = metric.periodDesc.isNotEmpty ? metric.periodDesc : '';
+
+    return SizedBox(
+      key: ValueKey<String>('credit_metric_${metric.period}_$label'),
+      width: fixedWidth ? 80.w : null,
+      child: Row(
+        mainAxisSize: fixedWidth ? MainAxisSize.max : MainAxisSize.min,
+        children: [
+          Container(
+            constraints: BoxConstraints(minWidth: 29.w),
+            padding: ScreenAdapter.edgeInsetsOnly(
+              left: 7,
+              top: 1,
+              right: 7,
+              bottom: 2,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.homeAccent,
+              borderRadius: BorderRadius.circular(6.r),
+            ),
+            child: Text(
+              metric.period,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: const Color.fromRGBO(255, 215, 127, 1),
+                fontSize: 20.sp,
+                height: 24 / 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Flexible(
+            fit: fixedWidth ? FlexFit.tight : FlexFit.loose,
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 14.sp,
+                height: 17 / 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

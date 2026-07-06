@@ -38,26 +38,21 @@ class NetworkModule {
     String path, {
     Map<String, dynamic> businessParams = const {},
   }) {
-    return client.buildQueryParameters(
-      path,
-      businessParams: businessParams,
-    );
+    return client.buildQueryParameters(path, businessParams: businessParams);
   }
 
   static Future<NetworkModule> create(NetworkConfig config) async {
     String? proxyHost;
     int? proxyPort;
-    if (!kReleaseMode) {
-      final systemProxy =
-          NetworkProxyManager.proxySettings ??
-          await NativeBridge.getSystemProxy();
-      final envProxyHost = const String.fromEnvironment('PROXY_HOST');
-      final envProxyPort = int.tryParse(
-        const String.fromEnvironment('PROXY_PORT'),
-      );
-      proxyHost = envProxyHost.isNotEmpty ? envProxyHost : systemProxy?.host;
-      proxyPort = envProxyPort ?? systemProxy?.port;
-    }
+    final systemProxy =
+        NetworkProxyManager.proxySettings ??
+        await NativeBridge.getSystemProxy();
+    final envProxyHost = const String.fromEnvironment('PROXY_HOST');
+    final envProxyPort = int.tryParse(
+      const String.fromEnvironment('PROXY_PORT'),
+    );
+    proxyHost = envProxyHost.isNotEmpty ? envProxyHost : systemProxy?.host;
+    proxyPort = envProxyPort ?? systemProxy?.port;
 
     final bootstrapDio = Dio(
       BaseOptions(
@@ -66,7 +61,7 @@ class NetworkModule {
         validateStatus: (_) => true,
       ),
     );
-    _configureDebugCapture(
+    configureDebugCapture(
       bootstrapDio,
       proxyHost: proxyHost,
       proxyPort: proxyPort,
@@ -95,13 +90,11 @@ class NetworkModule {
       commonParamsProvider: commonParamsProvider,
       responseParser: responseParser,
     );
-    if (!kReleaseMode) {
-      client.enableDebugCapture(
-        proxyHost: proxyHost,
-        proxyPort: proxyPort,
-        badCertificateAllowed: true,
-      );
-    }
+    client.enableDebugCapture(
+      proxyHost: proxyHost,
+      proxyPort: proxyPort,
+      badCertificateAllowed: true,
+    );
     final cryptoUtil = CryptoUtil(key: config.cryptoKey, iv: config.cryptoIv);
 
     return NetworkModule._(
@@ -113,14 +106,12 @@ class NetworkModule {
     );
   }
 
-  static void _configureDebugCapture(
+  @visibleForTesting
+  static void configureDebugCapture(
     Dio dio, {
     String? proxyHost,
     int? proxyPort,
   }) {
-    if (kReleaseMode) {
-      return;
-    }
     final adapter = dio.httpClientAdapter;
     if (adapter is! IOHttpClientAdapter) {
       return;
