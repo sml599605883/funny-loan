@@ -107,6 +107,7 @@ class ApiNavigationHelper {
             detailArguments,
             target.queryArguments,
           ),
+          orderStatusCode: target.queryArguments['sulphide'],
         );
         return;
       case _NavigationTargetType.webUrl:
@@ -409,16 +410,18 @@ class ApiNavigationHelper {
   static Future<LocationPermissionDialogAction>
   _showLocationServiceDialog() async {
     return _showLocationDialog(
-      title: 'Location service required',
-      message: 'Please enable device location service to continue.',
+      title: 'Location services are turned off',
+      message:
+          'Your device location service is currently disabled. Please turn it on and try again.',
     );
   }
 
   static Future<LocationPermissionDialogAction>
   _showLocationPermissionDialog() async {
     return _showLocationDialog(
-      title: 'Location permission required',
-      message: 'Please enable app location permission to continue.',
+      title: 'Location permission missing',
+      message:
+          'Access to your location has been denied. Please update your permission settings to continue with identity verification.',
     );
   }
 
@@ -434,12 +437,12 @@ class ApiNavigationHelper {
           TextButton(
             onPressed: () =>
                 Get.back(result: LocationPermissionDialogAction.cancel),
-            child: const Text('Cancel'),
+            child: const Text('Got It'),
           ),
           TextButton(
             onPressed: () =>
                 Get.back(result: LocationPermissionDialogAction.settings),
-            child: const Text('Settings'),
+            child: const Text('Open Settings'),
           ),
         ],
       ),

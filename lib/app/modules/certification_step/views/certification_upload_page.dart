@@ -30,6 +30,10 @@ abstract class CertificationUploadImageCompressor {
   Future<String?> compressToLimit(String filePath);
 }
 
+class CertificationUploadCameraPermissionException implements Exception {
+  const CertificationUploadCameraPermissionException();
+}
+
 class ImagePickerCertificationUploadImagePicker
     implements CertificationUploadImagePicker {
   ImagePickerCertificationUploadImagePicker({ImagePicker? imagePicker})
@@ -41,7 +45,7 @@ class ImagePickerCertificationUploadImagePicker
   Future<String?> pickFromCamera() async {
     final status = await AppPermissionService.requestCamera();
     if (!status.isGranted) {
-      return null;
+      throw const CertificationUploadCameraPermissionException();
     }
     final file = await _imagePicker.pickImage(source: ImageSource.camera);
     return file?.path;
@@ -150,11 +154,13 @@ class CertificationUploadPage extends StatefulWidget {
     this.imagePicker,
     this.apiService,
     this.imageCompressor,
+    this.openAppSettingsPage = AppPermissionService.openAppSettingsPage,
   });
 
   final CertificationUploadImagePicker? imagePicker;
   final ApiService? apiService;
   final CertificationUploadImageCompressor? imageCompressor;
+  final Future<bool> Function() openAppSettingsPage;
 
   @override
   State<CertificationUploadPage> createState() =>
@@ -253,9 +259,19 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
     Navigator.of(sheetContext).pop();
     EasyLoading.show();
     _identityUploadStartTime = _currentSecondsTimestamp();
-    final filePath = source == _UploadSource.camera
-        ? await _imagePicker.pickFromCamera()
-        : await _imagePicker.pickFromGallery();
+    final String? filePath;
+    try {
+      filePath = source == _UploadSource.camera
+          ? await _imagePicker.pickFromCamera()
+          : await _imagePicker.pickFromGallery();
+    } on CertificationUploadCameraPermissionException {
+      EasyLoading.dismiss();
+      if (!mounted) {
+        return;
+      }
+      await _showCameraPermissionDialog(context);
+      return;
+    }
     if (filePath == null || filePath.isEmpty) {
       EasyLoading.dismiss();
       return;
@@ -313,6 +329,33 @@ class _CertificationUploadPageState extends State<CertificationUploadPage> {
       'blessedness': source == _UploadSource.gallery ? '1' : '2',
       'impotencies': _identityType(),
     };
+  }
+
+  Future<void> _showCameraPermissionDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Camera permission missing'),
+          content: const Text(
+            'We cannot verify your ID without camera access. Please enable it in your device settings.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Got It'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(dialogContext).pop();
+                await widget.openAppSettingsPage();
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   String _identityType() {

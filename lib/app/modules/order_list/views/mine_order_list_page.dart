@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 import '../../../core/widgets/app_page_header.dart';
 import '../../../routes/api_navigation_helper.dart';
+import '../../../routes/navigation_target_mapper.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/screen_adapter.dart';
 import '../models/order_list_data.dart';
@@ -34,9 +35,7 @@ class _MineOrderListPageState extends State<MineOrderListPage> {
   void initState() {
     super.initState();
     final arguments = Get.arguments;
-    final initialTab = arguments is Map
-        ? (arguments['initialTab'] as int? ?? 0)
-        : 0;
+    final initialTab = _initialTabFromArguments(arguments);
     _currentTabIndex = initialTab.clamp(0, OrderTabBar.labels.length - 1);
     _refreshController = EasyRefreshController(
       controlFinishRefresh: true,
@@ -267,5 +266,16 @@ class _MineOrderListPageState extends State<MineOrderListPage> {
           'unawaked': '50',
         });
     return OrderListData.fromJson(response.data).items;
+  }
+
+  int _initialTabFromArguments(Object? arguments) {
+    if (arguments is! Map) {
+      return 0;
+    }
+    final initialTab = arguments['initialTab'];
+    if (initialTab is int) {
+      return initialTab;
+    }
+    return NavigationTargetMapper.orderTabIndexForCode(arguments['sulphide']);
   }
 }

@@ -563,21 +563,21 @@ class _CertificationBindCardPageState extends State<CertificationBindCardPage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Camera permission required'),
+          title: const Text('Camera permission missing'),
           content: const Text(
-            'Please enable camera access in Settings to continue.',
+            'We cannot verify your ID without camera access. Please enable it in your device settings.',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: const Text('Got It'),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
                 await widget.openAppSettingsPage();
               },
-              child: const Text('Settings'),
+              child: const Text('Open Settings'),
             ),
           ],
         );

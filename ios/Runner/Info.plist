@@ -36,13 +36,13 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>We use your camera so you can capture required identity and application documents.</string>
+	<string>We need access to your camera to take or upload a clear photo of your ID. This ensures your identity is verified accurately.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We use your location to support risk control, compliance checks, and service security.</string>
+	<string>Granting location access assists with identity authentication and serves as a safeguard for your account.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We use your location to support risk control, compliance checks, and service security.</string>
+	<string>Granting location access assists with identity authentication and serves as a safeguard for your account.</string>
 	<key>NSUserTrackingUsageDescription</key>
-	<string>We request tracking permission to measure campaign performance and improve acquisition efficiency.</string>
+	<string>Allowing tracking helps us deliver tailored content and strengthen your account protection.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

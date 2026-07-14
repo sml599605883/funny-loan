@@ -55,10 +55,13 @@ class NavigationHelper {
     );
   }
 
-  static Future<T?>? toOrderList<T extends Object?>({int initialTab = 0}) {
+  static Future<T?>? toOrderList<T extends Object?>({
+    int initialTab = 0,
+    Object? arguments,
+  }) {
     return Get.toNamed<T>(
-      AppRoutes.orderList,
-      arguments: <String, dynamic>{'initialTab': initialTab},
+      AppRoutes.mineOrderList,
+      arguments: arguments ?? <String, dynamic>{'initialTab': initialTab},
     );
   }
 
@@ -172,9 +175,7 @@ class NavigationHelper {
         return toLogin<T>();
       case NavigationTargetMapper.order:
         return toOrderList<T>(
-          initialTab: NavigationTargetMapper.orderTabIndexForCode(
-            orderStatusCode,
-          ),
+          arguments: _normalizeOrderPageArguments(arguments, orderStatusCode),
         );
       case NavigationTargetMapper.productDetail:
         return toDetail<T>(arguments: arguments);
@@ -271,5 +272,23 @@ class NavigationHelper {
       return Map<String, dynamic>.from(payload);
     }
     return routeArguments;
+  }
+
+  static Object? _normalizeOrderPageArguments(
+    Object? arguments,
+    Object? orderStatusCode,
+  ) {
+    final statusCode = '$orderStatusCode'.trim();
+    if (arguments is Map) {
+      final routeArguments = <String, dynamic>{...arguments};
+      if (statusCode.isNotEmpty && statusCode != 'null') {
+        routeArguments.putIfAbsent('sulphide', () => statusCode);
+      }
+      return routeArguments;
+    }
+    if (statusCode.isNotEmpty && statusCode != 'null') {
+      return <String, dynamic>{'sulphide': statusCode};
+    }
+    return arguments;
   }
 }
