@@ -18,8 +18,8 @@ import UserNotifications
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate, CLLocationManagerDelegate, FlutterStreamHandler {
   private let nativeBridgeChannelName = "funny_loan/native_bridge"
   private let nativeEventsChannelName = "funny_loan/native_events"
-  private let trustDecisionPartnerCode = "boqin_ph"
-  private let trustDecisionPartnerKey = "1dc25522f2adc77f5347816c0f7fa31b"
+  private let trustDecisionPartnerCode = "funny_loan"
+  private let trustDecisionPartnerKey = "1812ebb26ad0eba2b458bb4d7cd6e5f7"
   private lazy var trustDecisionManager = TDMobRiskManager.sharedManager()
   private var hasConfiguredTrustDecision = false
   private var flutterChannel: FlutterMethodChannel?

@@ -3,6 +3,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:funny_loan/app/core/utils/web_page_opener.dart';
 import 'package:get/get.dart';
 
 import '../../../core/storage/app_data_store.dart';
@@ -143,7 +144,7 @@ class LoginController extends GetxController {
   }
 
   void onPrivacyPolicyTap() {
-    log('Privacy Policy clicked on login page.');
+    WebPageOpener.openPath('/#/Portmanteaus');
   }
 
   void _syncPhoneText() {

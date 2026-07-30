@@ -25,12 +25,12 @@ class ReportPayloadBuilder {
       'skoals': _text(productId),
       'nonslip': _text(sceneType),
       'rejectee': _text(orderNo),
-      'typescripts': identifiers.idfv,
-      'overtired': identifiers.idfa,
+      'wooing': identifiers.idfv,
+      'snobbishnesses': identifiers.idfa,
       'kenaf': _text(startTime),
       'portaged': _text(endTime),
-      'shebang': location?.longitude ?? '',
-      'dogedom': location?.latitude ?? '',
+      'affectionally': location?.longitude ?? '',
+      'antecessors': location?.latitude ?? '',
     };
   }
 

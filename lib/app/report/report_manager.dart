@@ -181,6 +181,7 @@ class ReportManager {
       return;
     }
     _didStart = true;
+    cache.locationInfo = null;
     final isFirstLaunch = !cache.hasOpenedApp;
     cache.hasOpenedApp = true;
 

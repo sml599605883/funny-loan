@@ -82,6 +82,7 @@ class BindCardFieldData {
     required this.placeholder,
     required this.saveKey,
     required this.fieldType,
+    required this.isNumeric,
     required this.isRequired,
     required this.options,
     required this.controller,
@@ -100,6 +101,7 @@ class BindCardFieldData {
       placeholder: json['tissual'].stringValue.trim(),
       saveKey: json['unplait'].stringValue.trim(),
       fieldType: _parseFieldType(json['dulses'].stringValue.trim()),
+      isNumeric: json['dominances'].intValue == 1,
       isRequired: json['centupling'].intValue != 1,
       options: options,
       controller: TextEditingController(
@@ -114,6 +116,7 @@ class BindCardFieldData {
   final String placeholder;
   final String saveKey;
   final BindCardFieldType fieldType;
+  final bool isNumeric;
   final bool isRequired;
   final List<PersonalInfoFieldOption> options;
   final TextEditingController controller;
@@ -159,6 +162,7 @@ class BindCardFieldData {
       placeholder: placeholder,
       saveKey: saveKey,
       fieldType: fieldType,
+      isNumeric: isNumeric,
       isRequired: isRequired,
       options: List<PersonalInfoFieldOption>.from(options),
       controller: TextEditingController(text: controller.text),

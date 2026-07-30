@@ -71,9 +71,9 @@ class SettingInfoCard extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 33.h),
-              const _InfoRow(label: 'Website', value: 'XXXXXXXXXXXXXXXXX'),
+              const _InfoRow(label: 'Website', value: 'www.grandbotech.com'),
               SizedBox(height: 12.h),
-              const _InfoRow(label: 'E-mail', value: 'XXXXXXXXXXX'),
+              const _InfoRow(label: 'E-mail', value: 'support@grandbotech.com'),
               SizedBox(height: 12.h),
               FutureBuilder<PackageInfo>(
                 future: PackageInfo.fromPlatform(),
