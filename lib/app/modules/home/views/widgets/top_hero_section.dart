@@ -45,9 +45,9 @@ class TopHeroSection extends StatelessWidget {
                   child: Text(
                     card.productName,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 16,
+                      fontSize: 16.sp,
                       fontWeight: FontWeight.w700,
                     ),
                   ),

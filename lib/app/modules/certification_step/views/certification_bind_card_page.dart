@@ -828,7 +828,7 @@ class _BindCardField extends StatelessWidget {
                   key: Key('certification_bind_card_${field.saveKey}_input'),
                   controller: field.controller,
                   focusNode: focusNode,
-                  keyboardType: field.saveKey.contains('cardNo')
+                  keyboardType: field.isNumeric
                       ? TextInputType.number
                       : TextInputType.text,
                   decoration: InputDecoration(

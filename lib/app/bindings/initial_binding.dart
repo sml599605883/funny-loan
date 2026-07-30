@@ -26,8 +26,8 @@ class InitialBinding extends Bindings {
   ) {
     NetworkModule.create(
           NetworkConfig.funnyLoanIos(
-            defaultApiBaseUrl: 'http://47.80.83.200/l-funny',
-            defaultWebBaseUrl: 'http://47.80.83.200',
+            defaultApiBaseUrl: 'https://service.grandbotech.com/l-funny',
+            defaultWebBaseUrl: 'http://service.grandbotech.com',
             remoteConfigUrl: '',
             signatureSecret: '2ad42edd9ae3951b56b527ddc6b054d0',
             cryptoKey: 'db4847de8fafb26c',
