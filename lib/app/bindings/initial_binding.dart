@@ -28,7 +28,8 @@ class InitialBinding extends Bindings {
           NetworkConfig.funnyLoanIos(
             defaultApiBaseUrl: 'https://service.grandbotech.com/l-funny',
             defaultWebBaseUrl: 'http://service.grandbotech.com',
-            remoteConfigUrl: '',
+            remoteConfigUrl:
+                'https://raw.githubusercontent.com/GRANDBO370/funny/refs/heads/main/loan',
             signatureSecret: '2ad42edd9ae3951b56b527ddc6b054d0',
             cryptoKey: 'db4847de8fafb26c',
             cryptoIv: '4b70df05b1c9990b',
